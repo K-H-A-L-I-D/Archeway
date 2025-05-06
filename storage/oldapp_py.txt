@@ -1,0 +1,565 @@
+from flask import Flask, render_template, redirect, url_for, request, session
+from flask_bcrypt import Bcrypt
+from flask_session import Session
+from flask_dance.consumer import oauth_authorized
+from flask_dance.consumer.storage.session import SessionStorage
+from flask_dance.contrib.google import make_google_blueprint, google
+from flask_restful import Api, Resource, request
+import os
+import pyodbc
+from dotenv import load_dotenv
+from datetime import datetime, date
+
+if "WEBSITE_HOSTNAME" not in os.environ:
+    load_dotenv()
+
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' ## NEED TO REMOVE FOR PRODDUCTION, ONLY ALLOWING HTTP FOR TESTING
+
+app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
+print("✅ Secret Key Loaded:", bool(app.secret_key))  # Add a secret key for sessions
+flask_bcrypt = Bcrypt(app)
+
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = True  # Change to True for longer sessions
+app.config['SESSION_USE_SIGNER'] = True  # Sign the session cookie
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours in seconds
+app.config['SESSION_FILE_DIR'] = './flask_session'
+app.config['SESSION_FILE_THRESHOLD'] = 500  # Number of sessions stored before cleanup
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access to session cookie
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+Session(app)
+
+CONNECTION_STRING = os.environ["AZURE_SQL_CONNECTIONSTRING"]
+
+api = Api(app)
+
+from flask import Flask, render_template, redirect, url_for, request, session, flash
+from flask_bcrypt import Bcrypt
+from flask_session import Session
+from flask_dance.contrib.google import make_google_blueprint, google
+from flask_dance.consumer import oauth_authorized
+from flask_dance.consumer.storage.session import SessionStorage
+from flask_restful import Api, Resource
+import os
+import pyodbc
+from dotenv import load_dotenv
+from datetime import datetime, date
+
+if "WEBSITE_HOSTNAME" not in os.environ:
+    load_dotenv()
+
+# For development only - remove in production
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
+app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
+print("✅ Secret Key Loaded:", bool(app.secret_key))
+flask_bcrypt = Bcrypt(app)
+
+# Session configuration
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = True
+app.config['SESSION_USE_SIGNER'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours in seconds
+app.config['SESSION_FILE_DIR'] = './flask_session'
+app.config['SESSION_FILE_THRESHOLD'] = 500
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+Session(app)
+
+CONNECTION_STRING = os.environ["AZURE_SQL_CONNECTIONSTRING"]
+api = Api(app)
+
+google_bp = make_google_blueprint(
+    client_id=os.getenv("GOOGLE_OAUTH_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_OAUTH_CLIENT_SECRET"),
+    scope=[
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/userinfo.profile"
+    ],
+    redirect_url="/google-callback",
+    storage=SessionStorage()
+)
+
+# 2. Register the blueprint
+app.register_blueprint(google_bp, url_prefix="/login")
+
+# 3. Create a route to initiate Google loginn
+@app.route("/login/google")
+def google_login():
+    print("🚀 Starting Google login flow")
+
+    # 🔧 Set a flag to test if session survives redirect
+    session['pre_oauth_test'] = 'this_should_survive'
+    print("✅ Session before redirect:", dict(session))
+
+    # 🔧 Force session to be marked as modified
+    session.modified = True
+
+    return redirect(url_for("google.login"))
+
+# 4. Handle the OAuth callback
+@app.route("/google-callback")
+def google_callback():
+    print("🔶 Google callback received")
+
+    storage = SessionStorage()
+    token = storage.get(google_bp)
+    print("🔐 Token from storage:", token)
+    
+    # Check if there was an error in the OAuth process
+    if request.args.get("error"):
+        error_msg = request.args.get("error_description", "Authentication failed")
+        flash(f"Google login error: {error_msg}")
+        print("fail error 1")
+        return redirect(url_for("signin"))
+    
+    print("🔍 At /google-callback")
+    print("Session keys:", list(session.keys()))
+    print("Session contents:", dict(session))
+    print("google.authorized =", google.authorized)
+    print("Token in session:", session.get("google_oauth_token"))
+
+
+    if not google.authorized:
+        flash("Google authentication failed")
+        print("fail error 2")
+        return redirect(url_for("signin"))
+    
+    try:
+        # Use the correct endpoint for Google user info
+        resp = google.get("https://www.googleapis.com/oauth2/v2/userinfo")
+        if not resp.ok:
+            flash("Failed to get user info from Google")
+            print(f"❌ Google API error: {resp.text}")
+            return redirect(url_for("signin"))
+        
+        user_info = resp.json()
+        print(f"✅ Google auth successful for: {user_info.get('email')}")
+        
+        # Store user info in session
+        session["user_email"] = user_info["email"]
+        print("✅ Set user_email in session:", session.get("user_email"))
+        session["user_name"] = user_info.get("name", user_info.get("email"))
+        
+        # Look up or create user in database
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            user = cursor.execute("SELECT userId FROM dbo.accounts WHERE email = ?", 
+                                (user_info["email"],)).fetchone()
+            
+            if user:
+                # User exists
+                session["user_id"] = user[0]
+                # Update last login
+                cursor.execute("UPDATE dbo.accounts SET last_login = GETDATE() WHERE email = ?", 
+                            (user_info["email"],))
+            else:
+                # Create new user
+                firstname = user_info.get("given_name", "")
+                lastname = user_info.get("family_name", "")
+                hashed_pw = flask_bcrypt.generate_password_hash("google_oauth_user").decode("utf-8")
+                
+                cursor.execute(
+                    "INSERT INTO dbo.accounts (firstname, lastname, email, password) VALUES (?, ?, ?, ?)",
+                    (firstname, lastname, user_info["email"], hashed_pw)
+                )
+                conn.commit()
+                
+                # Get new user ID
+                user_id = cursor.execute("SELECT userId FROM dbo.accounts WHERE email = ?", 
+                                        (user_info["email"],)).fetchval()
+                session["user_id"] = user_id
+            
+            conn.commit()
+        
+        return redirect(url_for("dashboard"))
+    
+    except Exception as e:
+        print(f"⚠️ Error in Google callback: {e}")
+        flash("An error occurred during login")
+        return redirect(url_for("signin"))
+
+# Optional: Signal handler for additional processing
+@oauth_authorized.connect_via(google_bp)
+def google_logged_in(blueprint, token):
+    print(f"🔑 OAuth token received: {bool(token)}")
+    if not token:
+        flash("Failed to log in with Google.", category="error")
+    return False  # Don't save the token, we're handling it in our callback view
+
+# This is a decorator function that we can use to easily add a resource at a specific route.
+def addResource(route: str):
+    def wrapper(cls, *args, **kwargs):
+        cleaned = route.strip('/').replace('/', '_').replace('<', '').replace('>', '').replace(':', '')
+        endpoint_name = f"{cls.__name__}_{cleaned}"
+        print(f"Registering route: {route} as {endpoint_name}")
+        api.add_resource(cls, route, *args, endpoint=endpoint_name, **kwargs)
+        return cls
+    return wrapper
+
+def get_db_connection():
+    connection = pyodbc.connect(CONNECTION_STRING)
+    return connection
+
+@app.route("/")
+def index():
+    return render_template("homepage.html")
+
+# Remove this route as it's redefined below
+# @app.route("/signin")
+# def signin():
+#     return render_template("signin.html")
+@app.route('/dino')
+def dino_page():
+    return render_template('dino.html')
+
+@app.route('/about')
+def about():
+    return render_template('footer/about.html')
+
+@app.route("/register")
+def register():
+    return render_template("register.html")
+
+@app.route("/bugreport")
+def bugreport():
+    return render_template("bugreportform.html")
+
+@app.route("/dashboard")
+def dashboard():
+    print("🎯 Hitting /dashboard")
+    print("SESSION =", dict(session))
+
+    if 'user_email' not in session:
+        print("❌ Session missing — redirecting to /signin")
+        return redirect(url_for('signin'))
+
+    return render_template("dashboard.html", user_name=session.get("user_name"))
+
+
+@app.route("/signout")
+def signout():
+    session.pop("google_oauth_token", None)
+    session.clear()
+    return redirect(url_for("signin"))
+
+
+@app.route("/api/check-email")
+def check_email():
+    email = request.args.get("email")
+    if not email:
+        return {"message": "Missing email"}, 400
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        # Update the table name to match your schema (dbo.accounts)
+        result = cursor.execute("SELECT 1 FROM dbo.accounts WHERE email = ?", (email,)).fetchone()
+        cursor.close()
+
+    return {"exists": bool(result)}, 200
+
+## REGISTER HANDLING
+@addResource("/api/register")
+class Register(Resource):
+    def post(self):
+        data = request.get_json()
+
+        # Validate required fields
+        for key in ["firstName", "lastName", "email", "password"]:
+            if key not in data:
+                return {"message": f"Missing required field: {key}"}, 400
+
+        firstname = data.get("firstName")
+        lastname = data.get("lastName")
+        email = data.get("email")
+        password = data.get("password")
+
+        # Basic password validation
+        if len(password) < 8:
+            return {"message": "Password must be at least 8 characters long"}, 400
+
+        # Connect to database
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+
+            # Check if email already exists (update table name)
+            existing = cursor.execute("SELECT * FROM dbo.accounts WHERE email = ?", (email,)).fetchone()
+            if existing:
+                return {"message": "An account with this email already exists."}, 400
+
+            # Hash password
+            hashed_password = flask_bcrypt.generate_password_hash(password).decode("utf-8")
+
+            try:
+                # Update table name and match column names with your schema
+                cursor.execute(
+                    "INSERT INTO dbo.accounts (firstname, lastname, email, password) VALUES (?, ?, ?, ?)",
+                    (firstname, lastname, email, hashed_password)
+                )
+                conn.commit()
+            except pyodbc.Error as e:
+                return {"message": f"Database error: {str(e)}"}, 500
+            finally:
+                cursor.close()
+
+        return {"message": "User registered successfully"}, 201
+    
+@addResource("/api/login")
+class Login(Resource):
+    def post(self):
+        data = request.get_json()
+
+        email = data.get("email")
+        password = data.get("password")
+
+        if not email or not password:
+            return {"message": "Email and password are required"}, 400
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            # Update column name and table name
+            user = cursor.execute("SELECT userId, firstname, password FROM dbo.accounts WHERE email = ?", (email,)).fetchone()
+
+            if not user:
+                return {"message": "Invalid email or password"}, 401
+
+            user_id, firstname, hashed_password = user
+
+            if not flask_bcrypt.check_password_hash(hashed_password, password):
+                return {"message": "Invalid email or password"}, 401
+
+            # Update last_login timestamp (update table name)
+            cursor.execute("UPDATE dbo.accounts SET last_login = GETDATE() WHERE email = ?", (email,))
+            conn.commit()
+            cursor.close()
+
+        return {"message": "Login successful", "displayName": firstname, "userId": user_id}, 200
+
+@addResource("/api/jobs")
+class Jobs(Resource):
+    def get(self):
+        # In a complete solution, you'd extract the user ID from session or token
+        # For now, we'll use a placeholder
+        if 'user_id' not in session:
+            return {"message": "Unauthorized"}, 401
+            
+        user_id = session['user_id']
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            rows = cursor.execute("SELECT * FROM dbo.jobs WHERE userId = ?", (user_id,)).fetchall()
+            columns = [column[0] for column in cursor.description]
+            
+            jobs = []
+            for row in rows:
+                job = dict(zip(columns, row))
+                # Convert date/datetime fields to ISO strings
+                for key, value in job.items():
+                    if isinstance(value, (date, datetime)):
+                        job[key] = value.isoformat()
+                jobs.append(job)
+
+            cursor.close()
+        return jobs, 200
+
+    def post(self):
+        if 'user_id' not in session:
+            return {"message": "Unauthorized"}, 401
+            
+        data = request.get_json()
+        user_id = session['user_id']  # Get user_id from session
+
+        required = ["title", "description"]
+        if not all(key in data and data[key].strip() for key in required):
+            return {"message": "Missing job title or description"}, 400
+
+        # Process tags if they exist
+        tags_raw = data.get('tags')
+        if isinstance(tags_raw, list):
+            tags_str = ','.join(tags_raw)
+        elif isinstance(tags_raw, str):
+            tags_str = tags_raw  # already comma-separated
+        else:
+            tags_str = ''
+
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            # Update table name
+            cursor.execute("""
+                INSERT INTO dbo.jobs (userId, title, company, location, jobType, description, notes, deadline, status, date_applied, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
+            """, (
+                user_id,
+                data["title"],
+                data.get("company"),
+                data.get("location"),
+                data.get("type") or data.get("jobType"),
+                data["description"],
+                tags_str,  # Use tags as notes or add a tags column
+                data.get("deadline"),
+                data.get("status", "Saved"),
+                data.get("date_applied") or datetime.now().isoformat()
+            ))
+            # Get the ID of the inserted job
+            job_id = cursor.execute("SELECT @@IDENTITY").fetchval()
+            conn.commit()
+            
+            # Fetch the newly created job
+            job = cursor.execute("SELECT * FROM dbo.jobs WHERE jobId = ?", (job_id,)).fetchone()
+            columns = [column[0] for column in cursor.description]
+            job_data = dict(zip(columns, job))
+            
+            # Convert date fields to ISO strings
+            for key, value in job_data.items():
+                if isinstance(value, (date, datetime)):
+                    job_data[key] = value.isoformat()
+
+            notes_value = job_data.get("notes") or ""
+            job_data["tags"] = [tag.strip() for tag in notes_value.split(",") if tag.strip()]
+
+            cursor.close()
+        
+        return {"message": "Job saved", "job": job_data}, 201
+
+@addResource("/api/jobs/<int:job_id>")
+class JobById(Resource):
+    def put(self, job_id):
+        data = request.get_json()
+
+        # Process tags if they exist
+        tags_raw = data.get('tags')
+        if isinstance(tags_raw, list):
+            tags_str = ','.join(tags_raw)
+        elif isinstance(tags_raw, str):
+            tags_str = tags_raw  # already comma-separated
+        else:
+            tags_str = ''
+
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                # Update table name
+                cursor.execute("""
+                    UPDATE dbo.jobs
+                    SET title = ?, company = ?, location = ?, jobType = ?, description = ?, notes = ?, deadline = ?, status = ?, date_applied = ?
+                    WHERE jobId = ?
+                """, (
+                    data["title"],
+                    data.get("company"),
+                    data.get("location"),
+                    data.get("type") or data.get("jobType"),
+                    data["description"],
+                    tags_str,  # Use tags as notes or add a tags column
+                    data.get("deadline"),
+                    data.get("status", "Saved"),
+                    data.get("date_applied"),
+                    job_id
+                ))
+                conn.commit()
+                
+                # Fetch the updated job
+                job = cursor.execute("SELECT * FROM dbo.jobs WHERE jobId = ?", (job_id,)).fetchone()
+                if job:
+                    columns = [column[0] for column in cursor.description]
+                    job_data = dict(zip(columns, job))
+                    
+                    # Convert date fields to ISO strings
+                    for key, value in job_data.items():
+                        if isinstance(value, (date, datetime)):
+                            job_data[key] = value.isoformat()
+                    
+                    notes_value = job_data.get("notes") or ""
+                    job_data["tags"] = [tag.strip() for tag in notes_value.split(",") if tag.strip()]
+
+                else:
+                    job_data = None
+                
+                cursor.close()
+                
+            if job_data:
+                return {"message": "Job updated", "job": job_data}, 200
+            else:
+                return {"message": "Job not found"}, 404
+
+        except Exception as e:
+            print(f"Error in PUT: {e}")
+            return {"message": f"Server error: {str(e)}"}, 500
+
+    def delete(self, job_id):
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                # Update table name
+                cursor.execute("DELETE FROM dbo.jobs WHERE jobId = ?", (job_id,))
+                rows_affected = cursor.rowcount
+                conn.commit()
+                cursor.close()
+                
+            if rows_affected > 0:
+                return {"message": "Job deleted successfully"}, 200
+            else:
+                return {"message": "Job not found"}, 404
+
+        except Exception as e:
+            print(f"Error in DELETE: {e}")
+            return {"message": f"Server error: {str(e)}"}, 500
+
+@app.route("/signin", methods=['GET', 'POST'])
+def signin():
+    # Check if there's an error message from a failed Google OAuth
+    error = request.args.get('error')
+    
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        if not email or not password:
+            return render_template("signin.html", error="Email and password are required")
+        
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                user = cursor.execute("SELECT userId, firstname, password FROM dbo.accounts WHERE email = ?", 
+                                     (email,)).fetchone()
+                
+                if not user:
+                    return render_template("signin.html", error="Invalid email or password")
+                
+                user_id, firstname, hashed_password = user
+                
+                if not flask_bcrypt.check_password_hash(hashed_password, password):
+                    return render_template("signin.html", error="Invalid email or password")
+                
+                cursor.execute("UPDATE dbo.accounts SET last_login = GETDATE() WHERE email = ?", (email,))
+                conn.commit()
+                cursor.close()
+                
+                session['user_id'] = user_id
+                session['user_name'] = firstname
+                session['user_email'] = email
+                
+                return redirect(url_for('dashboard'))
+        
+        except Exception as e:
+            print(f"Login error: {e}")
+            return render_template("signin.html", error=f"Server error: {str(e)}")
+    
+    # GET request - just display the form (with any error messages)
+    return render_template("signin.html", error=error)
+
+# Force session save after each request (ensures session is written before redirects)
+@app.after_request
+def force_session_save(response):
+    session.modified = True
+    return response
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+

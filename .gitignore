@@ -1,0 +1,22 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# env file
+.env
+
+# github stuff
+.github
+
+# flask sessions
+flask_session/
+
+# app log
+*.log

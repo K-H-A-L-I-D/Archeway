@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Archeway - Testimonials</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .heading-underline {
+      height: 3px;
+      width: 80px;
+      background-color: #2563eb;
+      margin: 8px auto 0;
+    }
+    
+    .testimonial-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+    }
+    
+    .testimonial-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(to bottom, rgba(239, 246, 255, 0.2), rgba(255, 255, 255, 0.1));
+      pointer-events: none;
+    }
+    
+    .testimonial-item {
+      display: flex;
+      margin-bottom: 6rem;
+      position: relative;
+      border-radius: 1rem;
+      overflow: hidden;
+      background: white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    .testimonial-item::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      width: 120px;
+      height: 30px;
+      background-color: rgba(219, 234, 254, 0.7);
+      transform: rotate(-2deg);
+    }
+    
+    .testimonial-item.left::before {
+      left: 20px;
+    }
+    
+    .testimonial-item.right::before {
+      right: 20px;
+    }
+    
+    .testimonial-item.left {
+      flex-direction: row;
+      margin-right: 10%;
+      transform: translateX(-5%);
+    }
+    
+    .testimonial-item.right {
+      flex-direction: row-reverse;
+      margin-left: 10%;
+      transform: translateX(5%);
+    }
+    
+    .testimonial-image {
+      flex: 0 0 30%;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .testimonial-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .testimonial-info {
+      flex: 0 0 70%;
+      padding: 2rem;
+      background: white;
+    }
+    
+    .testimonial-title {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: #1e3a8a;
+      margin-bottom: 0.5rem;
+    }
+    
+    .testimonial-role {
+      font-size: 1rem;
+      color: #6b7280;
+      margin-bottom: 1rem;
+    }
+    
+    .testimonial-desc {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: #4b5563;
+      margin-bottom: 1.5rem;
+    }
+    
+    .result-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 1rem;
+    }
+    
+    .result-badge {
+      background-color: #dbeafe;
+      color: #2563eb;
+      padding: 0.3rem 0.8rem;
+      font-size: 0.875rem;
+      border-radius: 9999px;
+      display: inline-block;
+    }
+    
+    @media (max-width: 768px) {
+      .testimonial-item.left, 
+      .testimonial-item.right {
+        flex-direction: column;
+      }
+      
+      .testimonial-image {
+        flex: 0 0 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white font-sans">
+    <!-- Navigation -->
+    <nav class="bg-white/80 backdrop-blur-sm py-4 px-6 flex justify-between items-center sticky top-0 z-20 shadow-sm">
+      <div class="flex items-center">
+        <a href="/">
+          <img src="/static/img/logo-blue.png" alt="Archeway Logo" class="h-10 w-auto" id="logo-img">
+        </a>
+      </div>
+      <div class="hidden md:flex items-center gap-6">
+        <a href="/" class="text-gray-600 hover:text-blue-600 transition">Home</a>
+        <a href="#features" class="text-gray-600 hover:text-blue-600 transition">Features</a>
+        <a href="#testimonials" class="text-gray-600 hover:text-blue-600 transition">Testimonials</a>
+        <a href="#faq" class="text-gray-600 hover:text-blue-600 transition">FAQ</a>
+        <a href="/about" class="text-gray-600 hover:text-blue-600 transition">About</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="/signin" class="text-blue-600 hover:text-blue-700 transition">Sign In</a>
+        <a href="/register" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition flex items-center">
+          Get Started 
+          <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Header Section -->
+    <div class="text-center py-16 md:py-24">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-800 leading-tight">
+        Success Stories from <span class="text-blue-600">Archeway Users</span>
+      </h1>
+      <p class="mt-4 text-xl text-gray-600 max-w-3xl mx-auto px-6">
+        Hear from students and professionals who transformed their internship search and career journey with our platform.
+      </p>
+    </div>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="testimonials-section py-5">
+      <div class="testimonial-overlay" id="testimonials-overlay"></div>
+      <div class="container-fluid">
+        <div class="testimonial-container px-6">
+
+          <!-- Testimonial Item 1 (Left) -->
+          <div class="testimonial-item left" data-aos="fade-right">
+            <div class="testimonial-info">
+              <h3 class="testimonial-title">Jamie Davis</h3>
+              <p class="testimonial-role">Computer Science Major, Stanford University</p>
+              <p class="testimonial-desc">
+                "Archeway completely transformed my internship search process. Before using the platform, I was struggling to keep track of my applications and often missed follow-up opportunities. 
+                With Archeway's intuitive tracking system, I could see exactly where I stood with each company at a glance. The platform's job finder algorithm also suggested positions that perfectly 
+                matched my skills, leading me to apply for roles I wouldn't have found otherwise. Thanks to Archeway, I landed three interview offers and ultimately secured my dream internship at a 
+                leading tech company."
+              </p>
+              <div class="result-badges">
+                <span class="result-badge">Received 3 Offers</span>
+                <span class="result-badge">Tech Internship</span>
+                <span class="result-badge">Fortune 500 Company</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Testimonial Item 2 (Right) -->
+          <div class="testimonial-item right" data-aos="fade-left">
+            <div class="testimonial-info">
+              <h3 class="testimonial-title">Alex Lee</h3>
+              <p class="testimonial-role">Business Administration, NYU</p>
+              <p class="testimonial-desc">
+                "Finding the right business internship was overwhelming until I discovered Archeway. The application tracking feature gave me incredible insights into which types of applications were 
+                getting the most traction. I especially loved how I could export my data as reports to share with my career advisor, who helped me refine my approach based on the analytics. 
+                The platform's reminder system made sure I never missed a deadline or follow-up email. After just two months of using Archeway, I secured a competitive marketing internship that 
+                aligned perfectly with my career goals."
+              </p>
+              <div class="result-badges">
+                <span class="result-badge">Marketing Internship</span>
+                <span class="result-badge">Application Insights</span>
+                <span class="result-badge">Career Advancement</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial Item 3 (Left) -->
+          <div class="testimonial-item left" data-aos="fade-right">
+            <div class="testimonial-info">
+              <h3 class="testimonial-title">Sofia Rodriguez</h3>
+              <p class="testimonial-role">Engineering Major, Georgia Tech</p>
+              <p class="testimonial-desc">
+                "As a first-generation college student, navigating the internship world was intimidating. Archeway didn't just help me organize applications—it educated me about the entire process. 
+                The progress analytics showed me which skills to highlight, and the smart job finder matched me with opportunities that valued my unique background. The platform's interface was so 
+                intuitive that I could focus on preparing for interviews rather than managing spreadsheets. Within weeks, I received multiple callbacks and ultimately secured a paid engineering 
+                internship that opened doors I never thought possible."
+              </p>
+              <div class="result-badges">
+                <span class="result-badge">Engineering Position</span>
+                <span class="result-badge">Multiple Callbacks</span>
+                <span class="result-badge">First-Gen Success</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial Item 4 (Right) -->
+          <div class="testimonial-item right" data-aos="fade-left">
+            <div class="testimonial-info">
+              <h3 class="testimonial-title">Michael Johnson</h3>
+              <p class="testimonial-role">Data Science Graduate Student, UC Berkeley</p>
+              <p class="testimonial-desc">
+                "When switching from academia to industry, I needed a systematic approach to find relevant opportunities. Archeway's tagging system allowed me to categorize applications by technical 
+                requirements and company culture, giving me a clear picture of which positions truly aligned with my goals. The platform's data visualizations helped me identify patterns in successful 
+                applications and adjust my strategy accordingly. Thanks to these insights, I secured a data science internship at a healthcare startup where I could apply my research skills to 
+                real-world problems."
+              </p>
+              <div class="result-badges">
+                <span class="result-badge">Data Science Placement</span>
+                <span class="result-badge">Healthcare Sector</span>
+                <span class="result-badge">Career Transition</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial Item 5 (Left) -->
+          <div class="testimonial-item left" data-aos="fade-right">
+            <div class="testimonial-info">
+              <h3 class="testimonial-title">Priya Patel</h3>
+              <p class="testimonial-role">International Student, Finance Major</p>
+              <p class="testimonial-desc">
+                "As an international student, finding internships that offered visa sponsorship was challenging. Archeway's filtering options let me focus only on relevant opportunities, saving me 
+                countless hours. The platform's document management system kept all my international credentials organized and readily accessible. The detailed tracking features helped me manage 
+                the complex application timelines that often come with international placements. Within a semester, I secured a finance internship at a global firm that not only provided 
+                sponsorship but also offered mentorship specifically for international students."
+              </p>
+              <div class="result-badges">
+                <span class="result-badge">International Placement</span>
+                <span class="result-badge">Visa Sponsorship</span>
+                <span class="result-badge">Global Finance Firm</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial Item 6 (Right) -->
+          <div class="testimonial-item right" data-aos="fade-left">
+            <div class="testimonial-info">
+              <h3 class="testimonial-title">Ryan Taylor</h3>
+              <p class="testimonial-role">UX Design Student, RISD</p>
+              <p class="testimonial-desc">
+                "As a creative student, I was struggling to find design opportunities that matched my specific interests in accessibility and inclusive design. Archeway's job finder algorithm was a 
+                game-changer, discovering niche positions that never appeared on major job boards. The portfolio tracking feature let me customize which projects I submitted to each application, 
+                ensuring I always put my best work forward. After using Archeway for just one month, I landed a UX design internship at an innovative tech company focused on assistive technologies, 
+                perfectly aligning with my passion and career goals."
+              </p>
+              <div class="result-badges">
+                <span class="result-badge">UX Design Role</span>
+                <span class="result-badge">Tech Innovation</span>
+                <span class="result-badge">Accessibility Focus</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Call to Action -->
+    <div class="bg-blue-600 py-16">
+      <div class="max-w-4xl mx-auto px-6 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold text-white">Join 3 other Successful Students</h2>
+        <!--<h2 class="text-3xl md:text-4xl font-bold text-white">Join Thousands of Successful Students</h2>-->
+
+        <p class="mt-4 text-xl text-blue-100 max-w-2xl mx-auto">
+          Start your journey today and transform your internship search with Archeway's powerful tracking and discovery tools.
+        </p>
+        <div class="mt-8">
+          <a href="/register" class="bg-white hover:bg-gray-100 text-blue-600 py-3 px-8 rounded-md text-lg font-medium transition inline-flex items-center">
+            Create Your Free Account 
+            <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </a>
+        </div>
+        <p class="mt-4 text-blue-200">No credit card required. Get started in less than 60 seconds.</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 py-12">
+      <div class="max-w-6xl mx-auto px-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div>
+            <div class="text-2xl font-bold text-white mb-4">Archeway</div>
+            <p class="text-gray-400">Your path to career success begins here.</p>
+          </div>
+          
+          <div>
+            <div class="font-semibold text-white mb-4">Product</div>
+            <ul class="space-y-2">
+              <li><a href="#" class="text-gray-400 hover:text-white transition">Features</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-white transition">Pricing</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-white transition">Testimonials</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-white transition">FAQ</a></li>
+            </ul>
+          </div>
+          
+          <div>
+            <div class="font-semibold text-white mb-4">Resources</div>
+            <ul class="space-y-2">
+              <li><a href="#" class="text-gray-400 hover:text-white transition">Blog</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-white transition">Career Tips</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-white transition">Resume Guide</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-white transition">Interview Prep</a></li>
+            </ul>
+          </div>
+          
+          <div>
+            <div class="font-semibold text-white mb-4">Company</div>
+            <ul class="space-y-2">
+              <li><a href="/about" class="text-gray-400 hover:text-white transition">About</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-white transition">Contact</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-white transition">Privacy Policy</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-white transition">Terms of Service</a></li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="mt-12 pt-8 border-t border-gray-700 text-center text-gray-400">
+          <p>© <script>document.write(new Date().getFullYear())</script> Archeway. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script src="/static/js/testimonialsnotification.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize AOS
+      AOS.init({
+        duration: 800,
+        easing: 'ease-in-out',
+        once: true
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug Report Form | Archeway</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1e40af;
+            --accent-color: #f97316;
+            --text-color: #333;
+            --light-bg: #f9fafb;
+            --border-color: #e5e7eb;
+            --error-color: #ef4444;
+            --success-color: #10b981;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .back-arrow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: transform 0.2s ease;
+            padding: 15px;
+        }
+        
+        .back-arrow:hover {
+            transform: translateX(-3px);
+        }
+        
+        .back-arrow-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .card-header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            margin-left: 0;
+        }
+        
+        .bug-icon {
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .form-intro {
+            margin-bottom: 25px;
+            color: #555;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #444;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border 0.3s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-col {
+            flex: 1;
+        }
+        
+        .input-help {
+            display: block;
+            margin-top: 6px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .input-error {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            margin-top: 6px;
+            display: none;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+        
+        .button:active {
+            transform: translateY(0);
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #f3f4f6;
+            border: 1px dashed #d1d5db;
+            border-radius: 6px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .file-label:hover {
+            background-color: #e5e7eb;
+        }
+        
+        .file-icon {
+            background-color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+        }
+        
+        .file-info {
+            font-size: 0.9rem;
+        }
+        
+        .file-list {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .file-item {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .file-remove {
+            cursor: pointer;
+            color: #888;
+            transition: color 0.2s;
+        }
+        
+        .file-remove:hover {
+            color: var(--error-color);
+        }
+        
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+        
+        .privacy-note {
+            font-size: 0.85rem;
+            color: #666;
+            flex: 1;
+            margin-right: 20px;
+        }
+        
+        .form-message {
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .success-message {
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+        }
+        
+        .error-message {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error-color);
+            color: var(--error-color);
+        }
+        
+        /* Formspree specific styles */
+        .formspree-hidden {
+            display: none;
+        }
+        
+        .fs-thanks-message {
+            display: none;
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px auto;
+                padding: 15px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .form-footer {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .privacy-note {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <!-- Back arrow added here -->
+            <a href="#" class="back-arrow">
+                <i class="fas fa-arrow-left"></i>
+                <span class="back-arrow-text">Back</span>
+            </a>
+            
+            <div class="card-header">
+                <h1 style="display: flex; justify-content: center; align-items: center; text-align: center; margin-left: 0;">
+                    <div class="bug-icon">
+                        <i class="fas fa-bug"></i>
+                    </div>
+                    Report a Bug
+                </h1>
+            </div>
+            
+            <div class="card-body">
+                <div class="form-intro">
+                    <p>Found an issue with our platform? Help us improve by submitting a bug report. Please provide as much detail as possible to help us understand and fix the problem quickly.</p>
+                </div>
+                
+                <!-- Replace YOUR_FORM_ID with your actual Formspree form ID -->
+                <form id="bugReportForm" action="https://formspree.io/f/mnndpnjp" method="POST" enctype="multipart/form-data">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="name">Your Name</label>
+                                <input type="text" id="name" name="name" placeholder="Enter your name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                                <span class="input-help">We'll use this to follow up with you if needed.</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bugType">Type of Bug</label>
+                        <select id="bugType" name="bugType" required>
+                            <option value="" disabled selected>Select the type of issue</option>
+                            <option value="functional">Functional Error</option>
+                            <option value="ui">UI/Design Issue</option>
+                            <option value="performance">Performance Problem</option>
+                            <option value="data">Data Inconsistency</option>
+                            <option value="security">Security Concern</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="pageUrl">Page URL</label>
+                        <input type="url" id="pageUrl" name="pageUrl" placeholder="https://archeway.net/page-with-issue">
+                        <span class="input-help">Where did you encounter the bug?</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bugTitle">Bug Title</label>
+                        <input type="text" id="bugTitle" name="bugTitle" placeholder="Brief description of the issue" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bugDescription">Bug Description</label>
+                        <textarea id="bugDescription" name="bugDescription" placeholder="Please describe what happened, what you expected to happen, and any steps to reproduce the issue" required></textarea>
+                    </div>
+                    <!-- FILE UPLOAD
+                    <div class="form-group">
+                        <label for="attachments" class="file-label">
+                            <div class="file-icon">
+                                <i class="fas fa-image"></i>
+                            </div>
+                            <div class="file-info">
+                                <strong>Add Screenshots or Files</strong>
+                                <p>Drag & drop files here or click to browse</p>
+                            </div>
+                        </label>
+                        <input type="file" id="attachments" name="attachments" class="file-input" multiple>
+                        <div class="file-list" id="fileList"></div>
+                        <span class="input-help">Max 5 files. Supported formats: Images, PDF, TXT, LOG (Max 5MB each)</span>
+                    </div>
+                -->
+                    <!-- Honeypot field to prevent spam -->
+                    <input type="text" name="_gotcha" class="formspree-hidden">
+                    
+                    <!-- Success message that appears when form is submitted successfully -->
+                    <div id="thanksMessage" class="fs-thanks-message">
+                        <i class="fas fa-check-circle"></i> Thank you for your report! We've received your bug report and will look into it soon.
+                    </div>
+                    
+                    <div class="form-footer">
+                        <div class="privacy-note">
+                            <p>By submitting this form, you agree to our privacy policy. We'll only use your information to address your bug report.</p>
+                        </div>
+                        
+                        <button type="submit" class="button" id="submitButton">
+                            <i class="fas fa-paper-plane"></i> Submit Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('bugReportForm');
+            const fileInput = document.getElementById('attachments');
+            const fileList = document.getElementById('fileList');
+            const fileLabel = document.querySelector('.file-label');
+            const thanksMessage = document.getElementById('thanksMessage');
+            const submitButton = document.getElementById('submitButton');
+            const backArrow = document.querySelector('.back-arrow');
+            
+            // Back button functionality
+            backArrow.addEventListener('click', function(e) {
+                e.preventDefault();
+                // You can change this to the URL you want to go back to
+                // window.location.href = 'your-previous-page.html';
+                // Or use history.back() to navigate to the previous page
+                history.back();
+            });
+            
+            let files = [];
+            
+            // File input handling
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // Drag and drop handling
+            fileLabel.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileLabel.style.backgroundColor = '#e5e7eb';
+            });
+            
+            fileLabel.addEventListener('dragleave', () => {
+                fileLabel.style.backgroundColor = '#f3f4f6';
+            });
+            
+            fileLabel.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileLabel.style.backgroundColor = '#f3f4f6';
+                
+                if (e.dataTransfer.files.length > 0) {
+                    handleFiles(e.dataTransfer.files);
+                }
+            });
+            
+            // Form submission handling for Formspree
+            form.addEventListener('submit', function(e) {
+                // Don't prevent default - let Formspree handle the submission
+                
+                // Disable the submit button to prevent multiple submissions
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            });
+            
+            // Setup Formspree AJAX submission
+            form.addEventListener("submit", function(e) {
+                e.preventDefault();
+                let formData = new FormData(form);
+                
+                fetch(form.action, {
+                    method: form.method,
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Network response was not ok.');
+                })
+                .then(data => {
+                    // Show success message
+                    thanksMessage.style.display = 'block';
+                    // Hide form fields
+                    Array.from(form.elements).forEach(element => {
+                        if (element.className !== 'formspree-hidden' && element.id !== 'submitButton') {
+                            element.closest('.form-group') ? element.closest('.form-group').style.display = 'none' : null;
+                        }
+                    });
+                    document.querySelector('.form-row').style.display = 'none';
+                    document.querySelector('.form-footer').style.display = 'none';
+                    
+                    // Reset form
+                    form.reset();
+                    files = [];
+                    updateFileList();
+                    
+                    // Scroll to the success message
+                    thanksMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                })
+                .catch(error => {
+                    // Handle error
+                    console.error('Error:', error);
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Report';
+                    alert('There was a problem submitting your form. Please try again.');
+                });
+            });
+            
+            function handleFileSelect(e) {
+                handleFiles(e.target.files);
+            }
+            
+            function handleFiles(newFiles) {
+                // Check file count
+                if (files.length + newFiles.length > 5) {
+                    alert('Maximum 5 files allowed');
+                    return;
+                }
+                
+                // Process each file
+                for (let i = 0; i < newFiles.length; i++) {
+                    const file = newFiles[i];
+                    
+                    // Check file size
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert(`File "${file.name}" exceeds the 5MB limit`);
+                        continue;
+                    }
+                    
+                    // Check file type
+                    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain'];
+                    if (!validTypes.includes(file.type) && !file.name.endsWith('.log')) {
+                        alert(`File "${file.name}" is not a supported file type`);
+                        continue;
+                    }
+                    
+                    files.push(file);
+                }
+                
+                updateFileList();
+            }
+            
+            function updateFileList() {
+                fileList.innerHTML = '';
+                
+                files.forEach((file, index) => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    
+                    // Choose icon based on file type
+                    let icon = 'file';
+                    if (file.type.startsWith('image/')) {
+                        icon = 'image';
+                    } else if (file.type === 'application/pdf') {
+                        icon = 'file-pdf';
+                    } else if (file.type === 'text/plain' || file.name.endsWith('.log')) {
+                        icon = 'file-alt';
+                    }
+                    
+                    fileItem.innerHTML = `
+                        <i class="fas fa-${icon}"></i>
+                        ${file.name}
+                        <i class="fas fa-times file-remove" data-index="${index}"></i>
+                    `;
+                    
+                    fileList.appendChild(fileItem);
+                });
+                
+                // Add event listeners to remove buttons
+                document.querySelectorAll('.file-remove').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        files.splice(index, 1);
+                        updateFileList();
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

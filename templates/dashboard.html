@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - JobTracker</title>
+  <link rel="preload" href="/static/img/logo-light.png" as="image">
+  <link rel="preload" href="/static/img/logo-dark.png" as="image">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <a href="/" title="Go to Homepage">
+        <img id="archewayLogo" src="/static/img/logo-light.png" alt="Archeway Logo" class="logo-img">
+      </a>
+    </div>    
+    <div class="header-actions">
+      <button id="toggleDarkMode" class="btn btn-icon dark-mode-toggle">
+        <i class="fas fa-moon"></i>
+      </button>      
+      <a href="/signout" class="btn btn-outline-danger">Sign Out</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="search-container">
+      <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search jobs...">
+      </div>
+      <div class="filter-dropdown">
+        <select id="filterType">
+          <option value="all">All Types</option>
+          <option value="full-time">Full-time</option>
+          <option value="part-time">Part-time</option>
+          <option value="internship">Internship</option>
+          <option value="freelance">Freelance</option>
+        </select>
+      </div>
+      <div class="sort-dropdown">
+        <select id="sortBy">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="deadline">Deadline (soonest)</option>
+          <option value="title">Title (A-Z)</option>
+          <option value="company">Company (A-Z)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="add-job-container">
+      <button id="addNewJobBtn" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add New Job
+      </button>
+    </div>
+
+    <!-- Job Form (initially hidden) -->
+    <div id="jobForm" class="hidden">
+      <div class="form-card">
+        <h3 id="formTitle">Add New Job</h3>
+        <div class="form-group">
+          <label for="jobTitle">Job Title</label>
+          <input type="text" id="jobTitle" placeholder="e.g. Software Developer" required>
+        </div>
+        <div class="form-group">
+          <label for="jobCompany">Company</label>
+          <input type="text" id="jobCompany" placeholder="e.g. Tech Company Inc.">
+        </div>
+        <div class="form-group">
+          <label for="jobType">Job Type</label>
+          <select id="jobType">
+            <option value="full-time">Full-time</option>
+            <option value="part-time">Part-time</option>
+            <option value="internship">Internship</option>
+            <option value="freelance">Freelance</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="jobLocation">Location</label>
+          <input type="text" id="jobLocation" placeholder="e.g. New York, NY">
+        </div>
+        <div class="form-group">
+          <label for="jobDeadline">Application Deadline</label>
+          <input type="date" id="jobDeadline">
+        </div>
+        <div class="form-group">
+          <label for="jobDesc">Description</label>
+          <textarea id="jobDesc" rows="3" placeholder="Job description and notes"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="jobTags">Tags (comma separated)</label>
+          <input type="text" id="jobTags" placeholder="e.g. Python, SQL, JavaScript">
+        </div>
+        <div class="form-actions">
+          <button id="cancelJobBtn" class="btn btn-outline">Cancel</button>
+          <button id="submitJobBtn" class="btn btn-primary">Save Job</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jobs Container -->
+    <div id="jobList" class="jobs-container"></div>
+  </main>
+
+  <!-- Job Modal -->
+  <div id="jobModal" class="modal hidden">
+    <div class="modal-content">
+      <button class="close-modal" id="closeModalBtn" aria-label="Close modal">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="modal-left">
+        <h3 id="modalJobTitle"></h3>
+        <p id="modalCompany" class="modal-subtext"></p>
+        <p id="modalLocation" class="modal-subtext"></p>
+        <p id="modalDeadline" class="modal-subtext"></p>
+        <div id="modalTags" class="job-tags"></div>
+      </div>
+      <div class="modal-right">
+        <p id="modalDescription" class="modal-body"></p>
+      </div>
+    </div>
+  </div>
+  
+
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
