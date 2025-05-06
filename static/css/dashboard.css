@@ -1,0 +1,81 @@
+/* 
+ * dashboard.css - Dashboard Page Styles
+ */
+
+/* Main Content */
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem 3rem;
+  }
+  
+  /* Search and Filter */
+  .search-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  
+  .search-bar {
+    display: flex;
+    align-items: center;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    flex: 1;
+    min-width: 250px;
+  }
+  
+  .search-bar i {
+    color: var(--text-light);
+    margin-right: 0.5rem;
+  }
+  
+  .search-bar input {
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    width: 100%;
+  }
+  
+  .filter-dropdown select,
+  .sort-dropdown select {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    outline: none;
+    cursor: pointer;
+    min-width: 150px;
+  }
+  
+  /* Add Job Button */
+  .add-job-container {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  /* Job Form */
+  #jobForm {
+    margin-bottom: 2rem;
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .search-container {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .add-job-container {
+      justify-content: center;
+    }
+  }

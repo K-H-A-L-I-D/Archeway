@@ -1,0 +1,82 @@
+/* 
+ * header.css - Header and Navigation Styles
+ */
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background-color: var(--card-bg);
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .logo i {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+  }
+  
+  .logo h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+  
+  .header-actions {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  /* Logo image styles */
+  .logo-img {
+    height: 50px;
+    width: auto;
+    transition: filter 0.3s ease;
+  }
+  
+  .dark-mode .logo-img {
+    content: url('/static/img/logo-dark.png');
+  }
+  
+  /* Dark mode toggle */
+  .dark-mode-toggle {
+    background-color: #f0f0f0;
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  /* When in dark mode */
+  .dark-mode .dark-mode-toggle {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+  }
+  
+  /* Optional hover effect */
+  .dark-mode .dark-mode-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    header {
+      padding: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .header-actions {
+      margin-top: 0.5rem;
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }

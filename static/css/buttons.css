@@ -1,0 +1,161 @@
+/* 
+ * buttons.css - Button Component Styles
+ */
+
+/* Base Button */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+  }
+  
+  /* Primary Button */
+  .btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
+  }
+  
+  /* Outline Button */
+  .btn-outline {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+  }
+  
+  .btn-outline:hover {
+    background-color: var(--bg-color);
+  }
+  
+  /* Outline Danger Button */
+  .btn-outline-danger {
+    background-color: transparent;
+    border: 1px solid var(--danger-color);
+    color: var(--danger-color);
+  }
+  
+  .btn-outline-danger:hover {
+    background-color: var(--danger-color);
+    color: white;
+  }
+  
+  /* Icon Button */
+  .btn-icon {
+    padding: 0.5rem;
+    border-radius: 6px;
+  }
+  
+  /* Edit and Delete Buttons */
+  .btn-edit {
+    color: var(--primary-color);
+    background-color: rgba(67, 97, 238, 0.1);
+  }
+  
+  .btn-edit:hover {
+    background-color: rgba(67, 97, 238, 0.2);
+  }
+  
+  .btn-delete {
+    color: var(--danger-color);
+    background-color: rgba(239, 71, 111, 0.1);
+  }
+  
+  .btn-delete:hover {
+    background-color: rgba(239, 71, 111, 0.2);
+  }
+  
+  /* Block Button (full width) */
+  .btn-block {
+    width: 100%;
+  }
+  
+  /* Modern Button Style */
+  .btn.modern {
+    border-radius: 30px;
+    font-size: 0.95rem;
+    padding: 0.8rem 0;
+    letter-spacing: 1px;
+    font-weight: 600;
+    margin: 1.5rem 0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .btn.modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+  }
+  
+  /* Social Media Buttons */
+  .social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: rgba(240, 240, 240, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+  
+  .social-btn:hover {
+    background-color: var(--bg-color);
+    transform: translateY(-2px);
+  }
+  
+  .social-btn i {
+    font-size: 1.2rem;
+    color: #333;
+  }
+  
+  .dark-mode .social-btn {
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .dark-mode .social-btn i {
+    color: rgba(255, 255, 255, 0.9);
+  }
+  
+  /* Google Button */
+  .social-btn.google:hover {
+    border-color: #DB4437;
+    background-color: rgba(219, 68, 55, 0.2);
+  }
+  
+  .social-btn.google:hover i {
+    color: #DB4437;
+  }
+  
+  /* Github Button */
+  .social-btn.github:hover {
+    border-color: #333;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .social-btn.github:hover i {
+    color: #333;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .btn {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+    }
+    
+    .btn.modern {
+      padding: 0.7rem 0;
+    }
+  }
