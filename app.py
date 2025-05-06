@@ -8,11 +8,15 @@ from flask_restful import Api, Resource
 import os
 import pyodbc
 from dotenv import load_dotenv
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import logging
 from logging.handlers import RotatingFileHandler
 from werkzeug.middleware.proxy_fix import ProxyFix
-from input_sanitizer import (
+from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from utils.password_validator import validate_password
+from utils.input_sanitizer import (
     sanitize_string, 
     sanitize_html, 
     sanitize_email, 
@@ -23,12 +27,11 @@ from input_sanitizer import (
 )
 
 
-
 # Load environment variables
 if "WEBSITE_HOSTNAME" not in os.environ:
     load_dotenv()
 
-# Allow HTTP for developmentt
+# Allow HTTP for development
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
 
@@ -36,7 +39,20 @@ app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
 flask_bcrypt = Bcrypt(app)
 
+# Fix for proxied requests
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+# CSRF protection
+csrf = CSRFProtect(app)
+app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour
+
+# Rate limiting
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"  # Use in-memory storage for development
+)
 
 # Set secure cookies in production
 if "WEBSITE_HOSTNAME" in os.environ:
@@ -46,8 +62,10 @@ else:
     app.config['SESSION_COOKIE_SECURE'] = False
     app.config['PREFERRED_URL_SCHEME'] = 'http'
 
+# Session security settings
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
 # Session(app)
 
 CONNECTION_STRING = os.environ["AZURE_SQL_CONNECTIONSTRING"]
@@ -81,8 +99,50 @@ def get_db_connection():
     connection = pyodbc.connect(CONNECTION_STRING)
     return connection
 
+# API Authentication middleware
+@app.before_request
+def check_api_auth():
+    # Skip authentication for public endpoints
+    public_endpoints = ['/api/login', '/api/register', '/api/check-email']
+    
+    # Require authentication for all other API endpoints
+    if request.path.startswith('/api/') and request.path not in public_endpoints:
+        if 'user_id' not in session:
+            return jsonify({"message": "Unauthorized"}), 401
+
+# Security headers middleware
+@app.after_request
+def add_security_headers(response):
+    # Content Security Policy
+    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; img-src 'self' data:; font-src 'self' https://cdnjs.cloudflare.com;"
+    
+    # Prevent browsers from interpreting files as a different MIME type
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    
+    # Only allow being framed by the same origin
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    
+    # Enable browser XSS protection
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
+    # Enforce HTTPS (only in production)
+    if "WEBSITE_HOSTNAME" in os.environ:  # Check if in production
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    # Control browser features
+    response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=(self), interest-cohort=()'
+    
+    return response
+
+# Session save middleware
+@app.after_request
+def force_session_save(response):
+    session.modified = True
+    return response
+
 # Add debugging endpoint
 @app.route("/debug")
+@limiter.limit("5 per minute")
 def debug_info():
     return jsonify({
         "session": dict(session),
@@ -93,6 +153,7 @@ def debug_info():
     })
 
 @app.route("/login/google")
+@limiter.limit("5 per minute")
 def google_login():
     app.logger.info("Starting Google login flow")
     
@@ -107,6 +168,7 @@ def google_login():
     return redirect(url_for("google.login"))
 
 @app.route("/auth/callback")
+@limiter.limit("5 per minute")
 def google_callback():
     print("✅ /auth/callback HIT")
     print("🧪 Session before:", dict(session))
@@ -134,6 +196,10 @@ def google_callback():
         firstname = sanitize_string(user_info.get("given_name", ""))
         lastname = sanitize_string(user_info.get("family_name", ""))
 
+        # Regenerate session to prevent session fixation
+        session.clear()
+        
+        # Set new session variables
         session["user_email"] = email
         session["user_name"] = firstname or "User"
 
@@ -184,6 +250,7 @@ def index():
     return render_template("homepage.html")
 
 @app.route('/dino')
+@limiter.limit("5 per minute")
 def dino_page():
     return render_template('dino.html')
 
@@ -211,6 +278,7 @@ def dashboard():
     return render_template("dashboard.html", user_name=session["user_name"])
 
 @app.route("/test-db")
+@limiter.limit("5 per minute")
 def test_db():
     try:
         with get_db_connection() as conn:
@@ -228,6 +296,7 @@ def signout():
     return redirect(url_for("signin"))
 
 @app.route("/api/check-email")
+@limiter.limit("20 per minute")  # Higher limit for this less sensitive endpoint
 def check_email():
     email = sanitize_email(request.args.get("email"))
     if not email:
@@ -243,6 +312,8 @@ def check_email():
 # API endpoints
 @addResource("/api/register")
 class Register(Resource):
+    decorators = [limiter.limit("5 per minute")]  # Limit registration attempts
+    
     def post(self):
         data = request.get_json()
 
@@ -251,19 +322,21 @@ class Register(Resource):
             if key not in data:
                 return {"message": f"Missing required field: {key}"}, 400
 
+        # Validate password strength
+        password = data.get("password")
+        is_valid, errors = validate_password(password)
+        if not is_valid:
+            return {"message": errors[0]}, 400
+
         # Sanitize input
         firstname = sanitize_string(data.get("firstName"))
         lastname = sanitize_string(data.get("lastName"))
         email = sanitize_email(data.get("email"))
-        password = data.get("password")  # Don't sanitize password before hashing
+        # Don't sanitize password before hashing
 
         # Validate email format
         if not email:
             return {"message": "Invalid email format"}, 400
-
-        # Basic password validation
-        if not password or len(password) < 8:
-            return {"message": "Password must be at least 8 characters long"}, 400
 
         # Connect to database
         with get_db_connection() as conn:
@@ -292,6 +365,8 @@ class Register(Resource):
     
 @addResource("/api/login")
 class Login(Resource):
+    decorators = [limiter.limit("5 per minute")]  # Limit login attempts
+    
     def post(self):
         data = request.get_json()
 
@@ -321,6 +396,8 @@ class Login(Resource):
 
 @addResource("/api/jobs")
 class Jobs(Resource):
+    decorators = [limiter.limit("20 per minute")]  # Higher limit for regular operations
+    
     def get(self):
         if 'user_id' not in session:
             return {"message": "Unauthorized"}, 401
@@ -406,6 +483,8 @@ class Jobs(Resource):
 
 @addResource("/api/jobs/<int:job_id>")
 class JobById(Resource):
+    decorators = [limiter.limit("20 per minute")]  # Regular operations rate limit
+    
     def put(self, job_id):
         if 'user_id' not in session:
             return {"message": "Unauthorized"}, 401
@@ -516,6 +595,7 @@ class JobById(Resource):
             return {"message": f"Server error: {str(e)}"}, 500
 
 @app.route("/signin", methods=['GET', 'POST'])
+@limiter.limit("5 per minute", methods=["POST"])  # Limit only on POST requests
 def signin():
     error = request.args.get('error')
     
@@ -544,6 +624,10 @@ def signin():
                 conn.commit()
                 cursor.close()
                 
+                # Regenerate session to prevent session fixation
+                session.clear()
+                
+                # Set new session variables
                 session['user_id'] = user_id
                 session['user_name'] = sanitize_string(firstname)
                 session['user_email'] = email
@@ -555,11 +639,6 @@ def signin():
             return render_template("signin.html", error=f"Server error: {str(e)}")
     
     return render_template("signin.html", error=error)
-
-@app.after_request
-def force_session_save(response):
-    session.modified = True
-    return response
 
 if __name__ == "__main__":
     app.run(debug=True)

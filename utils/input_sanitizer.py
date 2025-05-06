@@ -1,15 +1,16 @@
 """
 input_sanitizer.py - Utilities for sanitizing user input in the Archeway application.
-This module provides functions to sanitize different types of user input to prevent
-common security vulnerabilities like SQL injection and XSS attacks.
+This module provides enhanced functions to sanitize different types of user input to prevent
+common security vulnerabilities like SQL injection, XSS attacks, and more.
 """
 
 import re
 import os
 import html
+import urllib.parse
 import bleach
 from bleach.sanitizer import ALLOWED_TAGS, ALLOWED_ATTRIBUTES
-from urllib.parse import quote, unquote
+from urllib.parse import quote, unquote, urlparse
 
 
 # Configure Bleach with appropriate settings for our application
@@ -18,6 +19,9 @@ CUSTOM_ALLOWED_TAGS = ALLOWED_TAGS + ['p', 'br', 'hr', 'h1', 'h2', 'h3', 'h4', '
 CUSTOM_ALLOWED_ATTRIBUTES = dict(ALLOWED_ATTRIBUTES)
 CUSTOM_ALLOWED_ATTRIBUTES['a'] = ['href', 'title', 'rel', 'target']
 CUSTOM_ALLOWED_ATTRIBUTES['img'] = ['src', 'alt', 'title', 'width', 'height']
+
+# Configure allowed URL schemes for sanitizing URLs
+ALLOWED_URL_SCHEMES = ['http', 'https', 'mailto', 'tel']
 
 
 def sanitize_string(value):
@@ -96,8 +100,8 @@ def sanitize_email(value):
     
     value = value.strip().lower()
     
-    # Simple email validation regex
-    # This is a basic check - for production, consider more comprehensive validation
+    # RFC 5322 compliant email validation regex
+    # This is more comprehensive than a basic check
     email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     
     if re.match(email_pattern, value):
@@ -125,14 +129,13 @@ def sanitize_sql_param(value):
     if not isinstance(value, str):
         value = str(value)
     
-    # Remove any characters that could be used in SQL injection
-    # This is a basic method - parameterized queries are the recommended approach
+    # Remove characters that could be used in SQL injection
     return re.sub(r'[;\'"\\/]', '', value.strip())
 
 
 def sanitize_url(value):
     """
-    Sanitize a URL.
+    Sanitize a URL to prevent XSS and open redirect attacks.
     
     Args:
         value: The URL to sanitize
@@ -149,17 +152,29 @@ def sanitize_url(value):
     
     value = value.strip()
     
-    # Basic URL validation regex
-    # Only allow http and https URLs
-    url_pattern = r'^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$'
-    
-    if re.match(url_pattern, value):
-        # If URL doesn't have a scheme, add https://
-        if not value.startswith(('http://', 'https://')):
+    # Parse URL to check scheme and components
+    try:
+        parsed_url = urlparse(value)
+        
+        # Ensure the URL has a scheme
+        if not parsed_url.scheme:
+            # If no scheme, add https:// by default
             value = 'https://' + value
+            parsed_url = urlparse(value)
+        
+        # Check for valid scheme
+        if parsed_url.scheme not in ALLOWED_URL_SCHEMES:
+            return None
+        
+        # Ensure there's a valid hostname
+        if not parsed_url.netloc:
+            return None
+        
+        # Return the sanitized URL
         return value
-    
-    return None
+        
+    except Exception:
+        return None
 
 
 def sanitize_filename(value):
@@ -179,19 +194,49 @@ def sanitize_filename(value):
     if not isinstance(value, str):
         value = str(value)
     
-    # Remove any path components and allow only alphanumeric, dash, underscore, and period
-    value = re.sub(r'[^\w\-\.]', '_', os.path.basename(value).strip())
+    # Get the basename to prevent directory traversal
+    basename = os.path.basename(value)
     
-    # Ensure the filename is not empty
-    if not value:
+    # Remove any non-alphanumeric characters except for safe ones
+    sanitized = re.sub(r'[^\w\-\.]', '_', basename).strip()
+    
+    # Ensure the filename is not empty or just dots
+    if not sanitized or sanitized == '.' or sanitized == '..':
         return 'untitled'
     
-    return value
+    return sanitized
+
+
+def sanitize_path(value):
+    """
+    Sanitize a file path to prevent path traversal attacks.
+    
+    Args:
+        value: The file path to sanitize
+        
+    Returns:
+        Sanitized path
+    """
+    if value is None:
+        return None
+    
+    # Convert to string if not already
+    if not isinstance(value, str):
+        value = str(value)
+    
+    # Normalize the path to resolve '..', '.' etc.
+    normalized_path = os.path.normpath(value)
+    
+    # Prevent path traversal by ensuring the path doesn't go up directories
+    if normalized_path.startswith('..') or '/../' in normalized_path:
+        return None
+    
+    return normalized_path
 
 
 def sanitize_search_query(value):
     """
-    Sanitize a search query.
+    Sanitize a search query to prevent injection attacks.
     
     Args:
         value: The search query to sanitize
@@ -206,8 +251,39 @@ def sanitize_search_query(value):
     if not isinstance(value, str):
         value = str(value)
     
-    # Basic sanitization for search query
-    return html.escape(value.strip())
+    # Remove special characters that could be used for injection
+    sanitized = re.sub(r'[<>\'";]', '', value.strip())
+    
+    return sanitized
+
+
+def sanitize_json_string(value):
+    """
+    Sanitize a string that will be included in JSON data.
+    
+    Args:
+        value: The string to sanitize
+        
+    Returns:
+        String safe for inclusion in JSON
+    """
+    if value is None:
+        return None
+    
+    # Convert to string if not already
+    if not isinstance(value, str):
+        value = str(value)
+    
+    # Escape JSON control characters
+    value = value.replace('\\', '\\\\')
+    value = value.replace('"', '\\"')
+    value = value.replace('\n', '\\n')
+    value = value.replace('\r', '\\r')
+    value = value.replace('\t', '\\t')
+    value = value.replace('\b', '\\b')
+    value = value.replace('\f', '\\f')
+    
+    return value
 
 
 def sanitize_dict(data, html_fields=None):

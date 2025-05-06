@@ -149,11 +149,17 @@ function validateRegisterForm(event) {
         email: email.value,
     };
 
-    // Fill in the request object that is being sent to the server
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    // MODIFY THIS: Update the fetch request to include the CSRF token
     const request = {
-        method: "POST", // We are using the POST request
-        headers: { "Content-Type": "application/json" }, // This is the header we are sending
-        body: JSON.stringify(formData), // Since this is a POST, we send a payload here
+      method: "POST",
+      headers: { 
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken
+      },
+      body: JSON.stringify(formData),
     };
 
     // Fetch API call

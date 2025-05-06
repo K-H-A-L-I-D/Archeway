@@ -249,6 +249,9 @@ async function submitJob() {
     // Check if we're editing an existing job
     const editId = document.getElementById('submitJobBtn').dataset.editId;
     let response;
+
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     
     if (editId) {
       // Update existing job
@@ -291,6 +294,10 @@ async function submitJob() {
 async function deleteJob(id) {
   if (confirm('Are you sure you want to delete this job?')) {
     try {
+
+      // Get CSRF token from meta tag
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
       const response = await fetch(`/api/jobs/${id}`, {
         method: 'DELETE'
       });
