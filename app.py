@@ -48,11 +48,11 @@ app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour
 
 # Rate limiting
 limiter = Limiter(
-    app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://"  # Use in-memory storage for development
+    storage_uri="memory://"
 )
+limiter.init_app(app)
+
 
 # Set secure cookies in production
 if "WEBSITE_HOSTNAME" in os.environ:

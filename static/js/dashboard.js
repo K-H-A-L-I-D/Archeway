@@ -75,17 +75,24 @@ function setupEventListeners() {
   });
 }
 
+// Get CSRF token from meta tag
+function getCSRFToken() {
+  return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+}
 
 // Load jobs from backend API
 async function loadJobs() {
   try {
     // Show loading state
-    // Show loading state
     const jobList = document.getElementById('jobList');
     jobList.innerHTML = '<div class="loading-spinner">Loading jobs...</div>';
     
-    // Fetch jobs from backend (no userId parameter)
-    const response = await fetch('/api/jobs');
+    // Fetch jobs from backend with CSRF token
+    const response = await fetch('/api/jobs', {
+      headers: {
+        'X-CSRFToken': getCSRFToken()
+      }
+    });
     
     if (!response.ok) {
       throw new Error(`Failed to load jobs: ${response.status}`);
@@ -251,14 +258,15 @@ async function submitJob() {
     let response;
 
     // Get CSRF token from meta tag
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const csrfToken = getCSRFToken();
     
     if (editId) {
       // Update existing job
       response = await fetch(`/api/jobs/${editId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken
         },
         body: JSON.stringify(jobData)
       });
@@ -267,7 +275,8 @@ async function submitJob() {
       response = await fetch('/api/jobs', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken
         },
         body: JSON.stringify(jobData)
       });
@@ -294,12 +303,14 @@ async function submitJob() {
 async function deleteJob(id) {
   if (confirm('Are you sure you want to delete this job?')) {
     try {
-
       // Get CSRF token from meta tag
-      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+      const csrfToken = getCSRFToken();
 
       const response = await fetch(`/api/jobs/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'X-CSRFToken': csrfToken
+        }
       });
       
       if (!response.ok) {

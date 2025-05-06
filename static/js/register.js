@@ -10,6 +10,11 @@ const NAME_PATTERN = /^[a-zA-Z0-9]{1,}$/;
 // you can find a list of ascii characters at https://ss64.com/ascii.html
 const PASSWORD_PATTERN = /^[\x21-\x7E]{8,}$/;
 
+// Helper function to get CSRF token
+function getCSRFToken() {
+  return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+}
+
 // Helper function to add bootstrap's is-valid class to our element, and remove the is-invalid class.
 const setValid = (input) => {
 	input.classList.remove("is-invalid");
@@ -38,7 +43,11 @@ async function validateEmail(id) {
   }
 
   // Duplication check via API
-  const response = await fetch(`/api/check-email?email=${encodeURIComponent(value)}`);
+  const response = await fetch(`/api/check-email?email=${encodeURIComponent(value)}`, {
+    headers: {
+      'X-CSRFToken': getCSRFToken()
+    }
+  });
   const result = await response.json();
 
   if (!response.ok || result.exists) {
@@ -49,8 +58,6 @@ async function validateEmail(id) {
   setValid(email);
   return true;
 }
-
-
 
 function validatePassword(id) {
 	const password = document.getElementById(id);
@@ -112,7 +119,6 @@ async function registerCallback(response) {
   window.location.href = "/signin";
 }
 
-
 // We validate the register form here
 function validateRegisterForm(event) {
     event.preventDefault(); // Prevent default form submission
@@ -150,9 +156,9 @@ function validateRegisterForm(event) {
     };
 
     // Get CSRF token from meta tag
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const csrfToken = getCSRFToken();
 
-    // MODIFY THIS: Update the fetch request to include the CSRF token
+    // Updated fetch request to include the CSRF token
     const request = {
       method: "POST",
       headers: { 
@@ -167,7 +173,6 @@ function validateRegisterForm(event) {
         .then(registerCallback)
         .catch(() => alert("An error occurred. Please try again."));
 }
-
 
 // This onReady ensures that the DOM is loaded before the event listeners are attached
 // Which is necessary in the rare case that our script is loaded before the DOM is fully loaded

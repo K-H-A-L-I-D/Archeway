@@ -6,6 +6,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.classList.add('dark-mode');
   }
 
+  // Get CSRF token from meta tag
+  function getCSRFToken() {
+    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  }
+
   // Handle form submission
   const signinForm = document.querySelector('form');
   if (signinForm) {
@@ -19,11 +24,12 @@ document.addEventListener('DOMContentLoaded', function() {
       };
       
       try {
-        // Send login request
+        // Send login request with CSRF token
         const response = await fetch('/api/login', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
           },
           body: JSON.stringify(loginData)
         });
