@@ -12,6 +12,16 @@ from datetime import datetime, date
 import logging
 from logging.handlers import RotatingFileHandler
 from werkzeug.middleware.proxy_fix import ProxyFix
+from input_sanitizer import (
+    sanitize_string, 
+    sanitize_html, 
+    sanitize_email, 
+    sanitize_sql_param,
+    sanitize_url,
+    sanitize_search_query,
+    sanitize_dict
+)
+
 
 
 # Load environment variables
@@ -115,31 +125,38 @@ def google_callback():
         user_info = resp.json()
         print("👤 User info:", user_info)
 
-        session["user_email"] = user_info["email"]
-        session["user_name"] = user_info.get("given_name", "User")
+        # Sanitize user info from Google
+        email = sanitize_email(user_info.get("email"))
+        if not email:
+            print("❌ Invalid email from Google")
+            return redirect(url_for("signin", error="Invalid email from Google OAuth"))
+            
+        firstname = sanitize_string(user_info.get("given_name", ""))
+        lastname = sanitize_string(user_info.get("family_name", ""))
+
+        session["user_email"] = email
+        session["user_name"] = firstname or "User"
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
             user = cursor.execute("SELECT userId FROM dbo.accounts WHERE email = ?", 
-                                  (user_info["email"],)).fetchone()
+                                  (email,)).fetchone()
 
             if user:
                 session["user_id"] = user[0]
                 cursor.execute("UPDATE dbo.accounts SET last_login = GETDATE() WHERE email = ?", 
-                               (user_info["email"],))
+                               (email,))
             else:
-                firstname = user_info.get("given_name", "")
-                lastname = user_info.get("family_name", "")
                 hashed_pw = flask_bcrypt.generate_password_hash("google_oauth_user").decode("utf-8")
 
                 cursor.execute(
                     "INSERT INTO dbo.accounts (firstname, lastname, email, password) VALUES (?, ?, ?, ?)",
-                    (firstname, lastname, user_info["email"], hashed_pw)
+                    (firstname, lastname, email, hashed_pw)
                 )
                 conn.commit()
 
                 user_id = cursor.execute("SELECT userId FROM dbo.accounts WHERE email = ?", 
-                                         (user_info["email"],)).fetchval()
+                                         (email,)).fetchval()
                 session["user_id"] = user_id
 
             conn.commit()
@@ -212,9 +229,9 @@ def signout():
 
 @app.route("/api/check-email")
 def check_email():
-    email = request.args.get("email")
+    email = sanitize_email(request.args.get("email"))
     if not email:
-        return {"message": "Missing email"}, 400
+        return {"message": "Invalid email format"}, 400
 
     with get_db_connection() as conn:
         cursor = conn.cursor()
@@ -234,13 +251,18 @@ class Register(Resource):
             if key not in data:
                 return {"message": f"Missing required field: {key}"}, 400
 
-        firstname = data.get("firstName")
-        lastname = data.get("lastName")
-        email = data.get("email")
-        password = data.get("password")
+        # Sanitize input
+        firstname = sanitize_string(data.get("firstName"))
+        lastname = sanitize_string(data.get("lastName"))
+        email = sanitize_email(data.get("email"))
+        password = data.get("password")  # Don't sanitize password before hashing
+
+        # Validate email format
+        if not email:
+            return {"message": "Invalid email format"}, 400
 
         # Basic password validation
-        if len(password) < 8:
+        if not password or len(password) < 8:
             return {"message": "Password must be at least 8 characters long"}, 400
 
         # Connect to database
@@ -273,8 +295,8 @@ class Login(Resource):
     def post(self):
         data = request.get_json()
 
-        email = data.get("email")
-        password = data.get("password")
+        email = sanitize_email(data.get("email"))
+        password = data.get("password")  # Don't sanitize password before verification
 
         if not email or not password:
             return {"message": "Email and password are required"}, 400
@@ -329,16 +351,21 @@ class Jobs(Resource):
         data = request.get_json()
         user_id = session['user_id']
 
+        # Sanitize input data
+        sanitized_data = sanitize_dict(data, html_fields=["description"])
+        
         required = ["title", "description"]
-        if not all(key in data and data[key].strip() for key in required):
+        if not all(key in sanitized_data and sanitized_data[key].strip() for key in required):
             return {"message": "Missing job title or description"}, 400
 
         # Process tags
-        tags_raw = data.get('tags')
+        tags_raw = sanitized_data.get('tags')
         if isinstance(tags_raw, list):
-            tags_str = ','.join(tags_raw)
+            # Sanitize each tag individually
+            sanitized_tags = [sanitize_string(tag) for tag in tags_raw]
+            tags_str = ','.join(tag for tag in sanitized_tags if tag)
         elif isinstance(tags_raw, str):
-            tags_str = tags_raw
+            tags_str = sanitize_string(tags_raw)
         else:
             tags_str = ''
 
@@ -349,15 +376,15 @@ class Jobs(Resource):
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
             """, (
                 user_id,
-                data["title"],
-                data.get("company"),
-                data.get("location"),
-                data.get("type") or data.get("jobType"),
-                data["description"],
+                sanitized_data.get("title"),
+                sanitized_data.get("company"),
+                sanitized_data.get("location"),
+                sanitized_data.get("type") or sanitized_data.get("jobType"),
+                sanitized_data.get("description"),
                 tags_str,
-                data.get("deadline"),
-                data.get("status", "Saved"),
-                data.get("date_applied") or datetime.now().isoformat()
+                sanitized_data.get("deadline"),
+                sanitized_data.get("status", "Saved"),
+                sanitized_data.get("date_applied") or datetime.now().isoformat()
             ))
             job_id = cursor.execute("SELECT @@IDENTITY").fetchval()
             conn.commit()
@@ -380,35 +407,54 @@ class Jobs(Resource):
 @addResource("/api/jobs/<int:job_id>")
 class JobById(Resource):
     def put(self, job_id):
+        if 'user_id' not in session:
+            return {"message": "Unauthorized"}, 401
+            
+        user_id = session['user_id']
         data = request.get_json()
+        
+        # Sanitize input data
+        sanitized_data = sanitize_dict(data, html_fields=["description"])
 
         # Process tags
-        tags_raw = data.get('tags')
+        tags_raw = sanitized_data.get('tags')
         if isinstance(tags_raw, list):
-            tags_str = ','.join(tags_raw)
+            # Sanitize each tag individually
+            sanitized_tags = [sanitize_string(tag) for tag in tags_raw]
+            tags_str = ','.join(tag for tag in sanitized_tags if tag)
         elif isinstance(tags_raw, str):
-            tags_str = tags_raw
+            tags_str = sanitize_string(tags_raw)
         else:
             tags_str = ''
 
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
+                
+                # First verify the job belongs to this user
+                job_owner = cursor.execute(
+                    "SELECT userId FROM dbo.jobs WHERE jobId = ?", (job_id,)
+                ).fetchval()
+                
+                if job_owner != user_id:
+                    return {"message": "Unauthorized access to this job"}, 403
+                
                 cursor.execute("""
                     UPDATE dbo.jobs
                     SET title = ?, company = ?, location = ?, jobType = ?, description = ?, notes = ?, deadline = ?, status = ?, date_applied = ?
-                    WHERE jobId = ?
+                    WHERE jobId = ? AND userId = ?
                 """, (
-                    data["title"],
-                    data.get("company"),
-                    data.get("location"),
-                    data.get("type") or data.get("jobType"),
-                    data["description"],
+                    sanitized_data.get("title"),
+                    sanitized_data.get("company"),
+                    sanitized_data.get("location"),
+                    sanitized_data.get("type") or sanitized_data.get("jobType"),
+                    sanitized_data.get("description"),
                     tags_str,
-                    data.get("deadline"),
-                    data.get("status", "Saved"),
-                    data.get("date_applied"),
-                    job_id
+                    sanitized_data.get("deadline"),
+                    sanitized_data.get("status", "Saved"),
+                    sanitized_data.get("date_applied"),
+                    job_id,
+                    user_id
                 ))
                 conn.commit()
                 
@@ -438,10 +484,24 @@ class JobById(Resource):
             return {"message": f"Server error: {str(e)}"}, 500
 
     def delete(self, job_id):
+        if 'user_id' not in session:
+            return {"message": "Unauthorized"}, 401
+            
+        user_id = session['user_id']
+        
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute("DELETE FROM dbo.jobs WHERE jobId = ?", (job_id,))
+                
+                # First verify the job belongs to this user
+                job_owner = cursor.execute(
+                    "SELECT userId FROM dbo.jobs WHERE jobId = ?", (job_id,)
+                ).fetchval()
+                
+                if job_owner != user_id:
+                    return {"message": "Unauthorized access to this job"}, 403
+                
+                cursor.execute("DELETE FROM dbo.jobs WHERE jobId = ? AND userId = ?", (job_id, user_id))
                 rows_affected = cursor.rowcount
                 conn.commit()
                 cursor.close()
@@ -460,8 +520,8 @@ def signin():
     error = request.args.get('error')
     
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+        email = sanitize_email(request.form.get('email'))
+        password = request.form.get('password')  # Don't sanitize password
         
         if not email or not password:
             return render_template("signin.html", error="Email and password are required")
@@ -485,7 +545,7 @@ def signin():
                 cursor.close()
                 
                 session['user_id'] = user_id
-                session['user_name'] = firstname
+                session['user_name'] = sanitize_string(firstname)
                 session['user_email'] = email
                 
                 return redirect(url_for('dashboard'))
