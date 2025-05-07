@@ -12,6 +12,8 @@ from datetime import datetime, date, timedelta
 import logging
 from logging.handlers import RotatingFileHandler
 from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -39,6 +41,140 @@ app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
 flask_bcrypt = Bcrypt(app)
 
+s = URLSafeTimedSerializer(app.secret_key)
+
+# Mail configuration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('EMAIL_USER', 'archewway.welcome@gmail.com')
+app.config['MAIL_PASSWORD'] = os.environ.get('EMAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = ('Archeway Team', os.environ.get('EMAIL_USER', 'archewayemail@gmail.com'))
+
+mail = Mail(app)
+
+@app.route("/send-test-email")
+def send_test_email():
+    test_email = session.get("user_email", "your@email.com")
+    first_name = session.get("user_name", "User")
+
+    success = send_welcome_email(test_email, first_name)
+
+    if success:
+        flash(f"✅ Test email sent to {test_email}", "success")
+    else:
+        flash("❌ Failed to send test email", "danger")
+
+    return redirect(url_for("dashboard"))
+
+
+def send_welcome_email(user_email, first_name):
+    try:
+        msg = Message('Welcome to Archeway!', recipients=[user_email])
+        
+        # Plain text fallback
+        msg.body = f'''Hi {first_name},
+
+Thank you for joining Archeway! We're excited to help you manage your internship journey.
+
+Get started by adding your first job application or browsing available opportunities.
+
+If you have any questions, please reach out to us at <a href="mailto:help@archeway.net">help@archeway.net</a>.</p>.
+
+Best regards,
+The Archeway Team
+'''
+        
+        # HTML version
+        msg.html = f'''
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #2563eb; padding: 20px; text-align: center;">
+                <h1 style="color: white; margin: 0;">Welcome to Archeway!</h1>
+            </div>
+            <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
+                <p>Hi {first_name},</p>
+                <p>Thank you for joining Archeway! We're excited to help you manage your internship journey.</p>
+                <p>Get started by adding your first job application or browsing available opportunities.</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="https://archeway.net/dashboard" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Go to Dashboard</a>
+                </div>
+                <p>If you have any questions, please reply to this email.</p>
+                <p>Best regards,<br>The Archeway Team</p>
+            </div>
+        </div>
+        '''
+        
+        mail.send(msg)
+        print(f"Welcome email sent to {user_email}")
+        return True
+    except Exception as e:
+        print(f"Failed to send welcome email: {str(e)}")
+        return False
+    
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form['email']
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            user = cursor.execute("SELECT firstname FROM dbo.accounts WHERE email = ?", (email,)).fetchone()
+
+        if user:
+            token = s.dumps(email, salt='password-reset')
+            reset_link = url_for('reset_with_token', token=token, _external=True)
+
+            # Send email
+            send_password_reset_email(email, user[0], reset_link)
+
+        # Redirect to password reset success page regardless of user existence
+        return render_template('forms/password_reset_success.html')
+
+    return render_template('forms/forgot_password.html')
+
+def send_password_reset_email(to_email, first_name, reset_link):
+    try:
+        msg = Message("Reset Your Archeway Password", recipients=[to_email])
+        msg.body = f"Hi {first_name}, click the link to reset your password: {reset_link}"
+        msg.html = f'''
+            <p>Hi {first_name},</p>
+            <p>Click the link below to reset your Archeway password:</p>
+            <p><a href="{reset_link}">Reset Password</a></p>
+            <p>This link will expire in 1 hour.</p>
+        '''
+        mail.send(msg)
+        print(f"Password reset email sent to {to_email}")
+        return True
+    except Exception as e:
+        print(f"Failed to send password reset email: {e}")
+        return False
+
+@app.route('/reset/<token>', methods=['GET', 'POST'])
+def reset_with_token(token):
+    try:
+        email = s.loads(token, salt='password-reset', max_age=3600)
+    except Exception as e:
+        flash("The reset link is invalid or has expired.", "danger")
+        return redirect(url_for('signin'))
+
+    if request.method == 'POST':
+        password = request.form['password']
+        if len(password) < 8:
+            flash("Password must be at least 8 characters.", "danger")
+            return redirect(request.url)
+
+        hashed_pw = flask_bcrypt.generate_password_hash(password).decode('utf-8')
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE dbo.accounts SET password = ? WHERE email = ?", (hashed_pw, email))
+            conn.commit()
+
+        flash("Your password has been updated!", "success")
+        return redirect(url_for('signin'))
+
+    return render_template('forms/reset_password.html', token=token)
 # Fix for proxied requests
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
@@ -225,6 +361,9 @@ def google_callback():
                                          (email,)).fetchval()
                 session["user_id"] = user_id
 
+                send_welcome_email(user_info["email"], firstname)
+
+
             conn.commit()
         
         session.modified = True
@@ -252,7 +391,11 @@ def index():
 @app.route('/dino')
 @limiter.limit("5 per minute")
 def dino_page():
-    return render_template('dino.html')
+    return render_template('footer/dino.html')
+
+@app.route('/ca_notice')
+def ca_notice():
+    return render_template('footer/ca_notice.html')
 
 @app.route('/about')
 def about():
@@ -264,11 +407,28 @@ def register():
 
 @app.route("/bugreport")
 def bugreport():
-    return render_template("forms/bugreportform.html")
+    return render_template('forms/bugreportform.html')
 
 @app.route("/testimonialform")
 def testimonialform():
-    return render_template("forms/testimonialform.html")    
+    return render_template('forms/testimonialform.html') 
+
+@app.route("/testimonials")
+def testimonials():
+    return render_template('footer/testimonials.html') 
+
+@app.route("/featureform")
+def featureform():
+    return render_template("forms/feature_request_form.html") 
+
+@app.route("/terms")
+def terms_of_service():
+    return render_template("footer/terms_of_service.html")   
+
+@app.route("/privacy")
+def privacy_policy():
+    return render_template("footer/privacy_policy.html")   
+
 
 @app.route("/dashboard")
 def dashboard():
@@ -449,8 +609,8 @@ class Jobs(Resource):
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO dbo.jobs (userId, title, company, location, jobType, description, notes, deadline, status, date_applied, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
+                INSERT INTO dbo.jobs (userId, title, company, location, jobType, description, notes, deadline, status, location_type, date_applied, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())
             """, (
                 user_id,
                 sanitized_data.get("title"),
@@ -463,6 +623,7 @@ class Jobs(Resource):
                 sanitized_data.get("status", "Saved"),
                 sanitized_data.get("date_applied") or datetime.now().isoformat()
             ))
+
             job_id = cursor.execute("SELECT @@IDENTITY").fetchval()
             conn.commit()
             
@@ -535,6 +696,9 @@ class JobById(Resource):
                     job_id,
                     user_id
                 ))
+
+
+
                 conn.commit()
                 
                 job = cursor.execute("SELECT * FROM dbo.jobs WHERE jobId = ?", (job_id,)).fetchone()

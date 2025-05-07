@@ -15,6 +15,90 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    /* Success Modal Styles */
+    .success-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .success-modal-content {
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .dark-mode .success-modal-content {
+      background-color: #222;
+      color: #fff;
+    }
+
+    .success-icon {
+      font-size: 60px;
+      color: #4CAF50;
+      margin-bottom: 20px;
+    }
+
+    .success-title {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    /* Make the auth card a bit wider */
+    .auth-card {
+      max-width: 500px !important;
+      width: 100%;
+    }
+    
+    /* Loading spinner styles */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+      vertical-align: middle;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* When in dark mode, adjust spinner colors */
+    .dark-mode .spinner {
+      border-color: rgba(0, 0, 0, 0.2);
+      border-top-color: #333;
+    }
+
+    /* Disabled button styles */
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    /* Add space for the spinner inside the button */
+    .btn-primary.modern {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 44px;
+    }
+  </style>
 </head>
 <body class="auth-page">
   <div class="auth-container">
@@ -81,6 +165,18 @@
           </div>
         </div>
 
+        <div class="form-group" style="margin-bottom: 1.5rem; text-align: center;">
+          <small class="form-hint" style="display: inline-block;">
+            By signing up, you agree to the
+            <a href="/terms" target="_blank">Terms and Conditions</a>
+            and
+            <a href="/privacy" target="_blank">Privacy Policy</a>.
+          </small>
+          <small class="form-hint" style="display: inline-block;">
+            California residents, see our <a href="/ca_notice" target="_blank">CA Notice at Collection</a>
+          </small>
+        </div>
+
         <button type="submit" class="btn btn-primary btn-block modern">CREATE ACCOUNT</button>
         
         <div class="divider">
@@ -99,7 +195,47 @@
       </div>
     </div>
   </div>
+  
+  <!-- Success Modal -->
+  <div id="successModal" class="success-modal">
+    <div class="success-modal-content">
+      <i class="fas fa-check-circle success-icon"></i>
+      <h2 class="success-title">Registration successful!</h2>
+      <p>Redirecting in <span id="countdown">3</span> seconds...</p>
+    </div>
+  </div>
 
+  <script>
+    // Check if dark mode is saved in localStorage and update accordingly
+    document.addEventListener('DOMContentLoaded', function() {
+      if (localStorage.getItem('darkMode') === 'enabled') {
+        document.body.classList.add('dark-mode');
+        updateLogoForTheme();
+      }
+    });
+    
+    function updateLogoForTheme() {
+      const logo = document.getElementById('registerLogo');
+      const isDarkMode = document.body.classList.contains('dark-mode');
+      logo.src = isDarkMode ? '/static/img/logo-dark.png' : '/static/img/logo-light.png';
+    }
+    
+    // Password visibility toggle
+    function togglePasswordVisibility(inputId) {
+      const passwordInput = document.getElementById(inputId);
+      const visibilityIcon = document.querySelector(`#${inputId} + .toggle-password i`);
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        visibilityIcon.classList.remove('fa-eye');
+        visibilityIcon.classList.add('fa-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        visibilityIcon.classList.remove('fa-eye-slash');
+        visibilityIcon.classList.add('fa-eye');
+      }
+    }
+  </script>
   <!-- External scripts -->
   <script src="{{ url_for('static', filename='js/register.js') }}"></script>
   <script src="{{ url_for('static', filename='js/minibugicon.js') }}"></script>

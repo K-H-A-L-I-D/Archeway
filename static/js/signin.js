@@ -17,6 +17,12 @@ document.addEventListener('DOMContentLoaded', function() {
     signinForm.addEventListener('submit', async function(e) {
       e.preventDefault();
       
+      // Show loading wheel and disable the button
+      const submitButton = document.querySelector('button[type="submit"]');
+      const originalButtonText = submitButton.innerHTML;
+      submitButton.innerHTML = '<div class="spinner"></div> Signing in...';
+      submitButton.disabled = true;
+      
       // Prepare login data
       const loginData = {
         email: document.getElementById('email').value,
@@ -50,7 +56,12 @@ document.addEventListener('DOMContentLoaded', function() {
           
           // Redirect to dashboard on success
           window.location.href = '/dashboard';
+          // Note: No need to reset the button since we're redirecting
         } else {
+          // Reset button state
+          submitButton.innerHTML = originalButtonText;
+          submitButton.disabled = false;
+          
           // Show error message
           const errorElement = document.createElement('div');
           errorElement.className = 'error-message';
@@ -66,6 +77,10 @@ document.addEventListener('DOMContentLoaded', function() {
           signinForm.insertBefore(errorElement, signinForm.firstChild);
         }
       } catch (error) {
+        // Reset button state
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
+        
         console.error('Login error:', error);
         alert('Login failed: ' + error.message);
       }

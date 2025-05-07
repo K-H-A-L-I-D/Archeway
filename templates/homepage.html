@@ -145,8 +145,8 @@
       </div>
     </nav>
 
-    <link rel="icon" type="image/png" href="../static/img/favicon.png">
-    <link rel="shortcut icon" type="image/png" href="../static/img/favicon.png">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
 
     <!-- Hero Section with Archway Animation -->
     <div class="max-w-6xl mx-auto px-6 pt-16 md:pt-24 pb-16 md:pb-24">
@@ -458,20 +458,21 @@
           <div>
             <div class="font-semibold text-white mb-4">Product</div>
             <ul class="space-y-2">
-              <li><a href="/dino" class="text-gray-400 hover:text-white transition">Features</a></li>
-              <li><a href="buymeacoffee.com/archewaydevs" class="text-gray-400 hover:text-white transition">Donate</a></li>
-              <li><a href="/dino" class="text-gray-400 hover:text-white transition">Testimonials</a></li>
+              <li><a href="/dino" class="text-gray-400 hover:text-white transition">Roadmap</a></li>
+              <li><a href="/dino" class="text-gray-400 hover:text-white transition">Donate</a></li>
+              <!--<li><a href="buymeacoffee.com/archewaydevs" class="text-gray-400 hover:text-white transition">Donate</a></li>-->
+              <li><a href="/testimonials" class="text-gray-400 hover:text-white transition">Testimonials</a></li>
               <li><a href="#faq" class="text-gray-400 hover:text-white transition">FAQ</a></li>
             </ul>
           </div>
           
           <div>
-            <div class="font-semibold text-white mb-4">Resources</div>
+            <div class="font-semibold text-white mb-4">Contact & Feedback</div>
             <ul class="space-y-2">
-              <li><a href="/dashboard" class="text-gray-400 hover:text-white transition">Blog</a></li>
-              <li><a href="/dino" class="text-gray-400 hover:text-white transition">Career Tips</a></li>
-              <li><a href="/dino" class="text-gray-400 hover:text-white transition">Resume Guide</a></li>
-              <li><a href="/dino" class="text-gray-400 hover:text-white transition">Interview Prep</a></li>
+              <li><a href="mailto:contact@archeway.net" class="text-gray-400 hover:text-white transition">Contact</a></li>
+              <li><a href="/bugreport" class="text-gray-400 hover:text-white transition">Bug Report</a></li>
+              <li><a href="/testimonialform" class="text-gray-400 hover:text-white transition">Testimonial Form</a></li>
+              <li><a href="/featureform" class="text-gray-400 hover:text-white transition">Feature Request</a></li>
             </ul>
           </div>
           
@@ -480,16 +481,14 @@
             <ul class="space-y-2">
               <li><a href="/about" class="text-gray-400 hover:text-white transition">About</a></li>
               <li><a href="mailto:contact@archeway.net" class="text-gray-400 hover:text-white transition">Contact</a></li>
-              <li><a href="/dino" class="text-gray-400 hover:text-white transition">Privacy Policy</a></li>
-              <li><a href="/dino" class="text-gray-400 hover:text-white transition">Terms of Service</a></li>
+              <li><a href="/privacy" class="text-gray-400 hover:text-white transition">Privacy Policy</a></li>
+              <li><a href="/terms" class="text-gray-400 hover:text-white transition">Terms of Service</a></li>
             </ul>
           </div>
         </div>
         
         <div class="mt-12 pt-8 border-t border-gray-700 text-center text-gray-400">
-          <p>© <script>document.write(new Date().getFullYear())</script> Archeway. All rights reserved.</p>
-          <p class="mt-2"><a href="https://logo.dev" target="_blank" rel="noopener noreferrer" class="hover:text-blue-400 transition">Dashboard logos provided by Logo.dev</a></p>
-        </div>
+          <p>© <script>document.write(new Date().getFullYear())</script> Archeway. All rights reserved.</p>        </div>
       </div>
     </footer>
   </div>

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feature Request Form | Archeway</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1e40af;
+            --accent-color: #f97316;
+            --text-color: #333;
+            --light-bg: #f9fafb;
+            --border-color: #e5e7eb;
+            --error-color: #ef4444;
+            --success-color: #10b981;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .back-arrow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: transform 0.2s ease;
+            padding: 15px;
+        }
+        
+        .back-arrow:hover {
+            transform: translateX(-3px);
+        }
+        
+        .back-arrow-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .card-header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            margin-left: 0;
+        }
+        
+        .feature-icon {
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .form-intro {
+            margin-bottom: 25px;
+            color: #555;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #444;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border 0.3s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-col {
+            flex: 1;
+        }
+        
+        .input-help {
+            display: block;
+            margin-top: 6px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .input-error {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            margin-top: 6px;
+            display: none;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+        
+        .button:active {
+            transform: translateY(0);
+        }
+        
+        .priority-stars {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .priority-stars input {
+            display: none;
+        }
+        
+        .priority-stars label {
+            cursor: pointer;
+            font-size: 32px;
+            color: #d1d5db;
+        }
+        
+        .priority-stars input:checked ~ label {
+            color: var(--accent-color);
+        }
+        
+        .priority-stars:hover label {
+            color: var(--accent-color);
+        }
+        
+        .priority-stars label:hover ~ label {
+            color: #d1d5db;
+        }
+        
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+        
+        .privacy-note {
+            font-size: 0.85rem;
+            color: #666;
+            flex: 1;
+            margin-right: 20px;
+        }
+        
+        .form-message {
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .success-message {
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+        }
+        
+        .error-message {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error-color);
+            color: var(--error-color);
+        }
+        
+        /* Formspree specific styles */
+        .formspree-hidden {
+            display: none;
+        }
+        
+        .fs-thanks-message {
+            display: none;
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px auto;
+                padding: 15px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .form-footer {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .privacy-note {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <!-- Back arrow added here -->
+            <a href="#" class="back-arrow">
+                <i class="fas fa-arrow-left"></i>
+                <span class="back-arrow-text">Back</span>
+            </a>
+            
+            <div class="card-header">
+                <h1 style="display: flex; justify-content: center; align-items: center; text-align: center; margin-left: 0;">
+                    <div class="feature-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    Feature Request
+                </h1>
+            </div>
+            
+            <div class="card-body">
+                <div class="form-intro">
+                    <p>Have an idea for a new tool or resource that would make Archeway even better? We'd love to hear your suggestions! Your feedback helps us prioritize new features and continuously improve our platform.</p>
+                </div>
+                
+                <!-- Replace YOUR_FORM_ID with your actual Formspree form ID -->
+                <form id="featureRequestForm" action="https://formspree.io/f/mjkwwnnp" method="POST">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="name">Your Name</label>
+                                <input type="text" id="name" name="name" placeholder="Enter your name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                                <span class="input-help">We'll use this to follow up about your suggestion if needed.</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="userType">I am a:</label>
+                        <select id="userType" name="userType" required>
+                            <option value="" disabled selected>Select your user type</option>
+                            <option value="student">Student</option>
+                            <option value="job-seeker">Job Seeker</option>
+                            <option value="recent-graduate">Recent Graduate</option>
+                            <option value="educator">Educator</option>
+                            <option value="employer">Employer</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="otherUserTypeGroup" style="display: none;">
+                        <label for="otherUserType">Please specify your user type:</label>
+                        <input type="text" id="otherUserType" name="otherUserType" placeholder="Please specify your user type">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="featureCategory">Feature Category</label>
+                        <select id="featureCategory" name="featureCategory" required>
+                            <option value="" disabled selected>Select feature category</option>
+                            <option value="application-tools">Application Tools</option>
+                            <option value="job-search">Job Search</option>
+                            <option value="resume-tools">Resume & CV Tools</option>
+                            <option value="interview-prep">Interview Preparation</option>
+                            <option value="career-planning">Career Planning</option>
+                            <option value="networking">Networking</option>
+                            <option value="analytics">Analytics & Reporting</option>
+                            <option value="learning">Learning Resources</option>
+                            <option value="mobile-features">Mobile Features</option>
+                            <option value="integration">Platform Integration</option>
+                            <option value="ai-tools">AI & Automation</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="otherFeatureCategoryGroup" style="display: none;">
+                        <label for="otherFeatureCategory">Please specify the feature category:</label>
+                        <input type="text" id="otherFeatureCategory" name="otherFeatureCategory" placeholder="Please specify the feature category">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="featureTitle">Feature Title</label>
+                        <input type="text" id="featureTitle" name="featureTitle" placeholder="Brief name of your feature idea" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="featureDescription">Feature Description</label>
+                        <textarea id="featureDescription" name="featureDescription" placeholder="Please describe your feature idea in detail. What would it do? How would it work? Why would it be valuable?" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="userProblem">What problem would this feature solve?</label>
+                        <textarea id="userProblem" name="userProblem" placeholder="Describe the current challenge or inefficiency that this feature would address"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="priority">How important is this feature to you?</label>
+                        <div class="priority-stars">
+                            <input type="radio" id="priority1" name="priority" value="1">
+                            <label for="priority1" title="Nice to have"><i class="fas fa-star"></i></label>
+                            
+                            <input type="radio" id="priority2" name="priority" value="2">
+                            <label for="priority2" title="Somewhat important"><i class="fas fa-star"></i></label>
+                            
+                            <input type="radio" id="priority3" name="priority" value="3">
+                            <label for="priority3" title="Important"><i class="fas fa-star"></i></label>
+                            
+                            <input type="radio" id="priority4" name="priority" value="4">
+                            <label for="priority4" title="Very important"><i class="fas fa-star"></i></label>
+                            
+                            <input type="radio" id="priority5" name="priority" value="5" required>
+                            <label for="priority5" title="Critical"><i class="fas fa-star"></i></label>
+                        </div>
+                        <span class="input-help">1 = Nice to have, 5 = Critical for my success</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="similarExamples">Similar examples (optional)</label>
+                        <textarea id="similarExamples" name="similarExamples" placeholder="Have you seen similar features on other platforms? Please provide examples if available."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="willingness">
+                            <input type="checkbox" id="willingness" name="willingness" value="yes" style="width: auto; margin-right: 10px;">
+                            I'm willing to participate in user testing for this feature if it's developed.
+                        </label>
+                    </div>
+                    
+                    <!-- Honeypot field to prevent spam -->
+                    <input type="text" name="_gotcha" class="formspree-hidden">
+                    
+                    <!-- Success message that appears when form is submitted successfully -->
+                    <div id="thanksMessage" class="fs-thanks-message">
+                        <i class="fas fa-check-circle"></i> Thank you for your feature suggestion! We appreciate your input and will carefully consider your idea as we plan future updates to Archeway.
+                    </div>
+                    
+                    <div class="form-footer">
+                        <div class="privacy-note">
+                            <p>By submitting this form, you agree to our privacy policy. We'll only use your information to follow up about your feature request and improve our platform.</p>
+                        </div>
+                        
+                        <button type="submit" class="button" id="submitButton">
+                            <i class="fas fa-paper-plane"></i> Submit Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('featureRequestForm');
+            const thanksMessage = document.getElementById('thanksMessage');
+            const submitButton = document.getElementById('submitButton');
+            const backArrow = document.querySelector('.back-arrow');
+            
+            // Add these lines for the "Other" functionality
+            const userTypeSelect = document.getElementById('userType');
+            const featureCategorySelect = document.getElementById('featureCategory');
+            const otherUserTypeGroup = document.getElementById('otherUserTypeGroup');
+            const otherFeatureCategoryGroup = document.getElementById('otherFeatureCategoryGroup');
+            const otherUserTypeInput = document.getElementById('otherUserType');
+            const otherFeatureCategoryInput = document.getElementById('otherFeatureCategory');
+            
+            // Back button functionality
+            backArrow.addEventListener('click', function(e) {
+                e.preventDefault();
+                history.back();
+            });
+            
+            // Show/hide other user type input based on selection
+            userTypeSelect.addEventListener('change', function() {
+                if (this.value === 'other') {
+                    otherUserTypeGroup.style.display = 'block';
+                    otherUserTypeInput.setAttribute('required', 'required');
+                } else {
+                    otherUserTypeGroup.style.display = 'none';
+                    otherUserTypeInput.removeAttribute('required');
+                }
+            });
+            
+            // Show/hide other feature category input based on selection
+            featureCategorySelect.addEventListener('change', function() {
+                if (this.value === 'other') {
+                    otherFeatureCategoryGroup.style.display = 'block';
+                    otherFeatureCategoryInput.setAttribute('required', 'required');
+                } else {
+                    otherFeatureCategoryGroup.style.display = 'none';
+                    otherFeatureCategoryInput.removeAttribute('required');
+                }
+            });
+            
+            // Form submission handling for Formspree
+            form.addEventListener('submit', function(e) {
+                // Disable the submit button to prevent multiple submissions
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            });
+            
+            // Setup Formspree AJAX submission
+            form.addEventListener("submit", function(e) {
+                e.preventDefault();
+                let formData = new FormData(form);
+                
+                fetch(form.action, {
+                    method: form.method,
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Network response was not ok.');
+                })
+                .then(data => {
+                    // Show success message
+                    thanksMessage.style.display = 'block';
+                    // Hide form fields
+                    Array.from(form.elements).forEach(element => {
+                        if (element.className !== 'formspree-hidden' && element.id !== 'submitButton') {
+                            element.closest('.form-group') ? element.closest('.form-group').style.display = 'none' : null;
+                        }
+                    });
+                    document.querySelector('.form-row').style.display = 'none';
+                    document.querySelector('.form-footer').style.display = 'none';
+                    
+                    // Reset form
+                    form.reset();
+                    
+                    // Scroll to the success message
+                    thanksMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                })
+                .catch(error => {
+                    // Handle error
+                    console.error('Error:', error);
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
+                    alert('There was a problem submitting your form. Please try again.');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

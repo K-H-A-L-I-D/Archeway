@@ -62,7 +62,7 @@
             <input type="checkbox" id="remember" name="remember">
             <label for="remember">Remember Me</label>
           </div>
-          <a href="#" class="forgot-password">Forgot Password</a>
+          <a href="{{ url_for('forgot_password') }}" class="forgot-password">Forgot Password?</a>
         </div>
         
         <div class="divider">
@@ -86,6 +86,23 @@
     </div>
   </div>
 
+  <script src="{{ url_for('static', filename='js/signin.js') }}"></script>
+  <script>
+    // Check if dark mode is saved in localStorage and update accordingly
+    document.addEventListener('DOMContentLoaded', function() {
+      if (localStorage.getItem('darkMode') === 'enabled') {
+        document.body.classList.add('dark-mode');
+        updateLogoForTheme();
+      }
+    });
+    
+    function updateLogoForTheme() {
+      const logo = document.getElementById('signinLogo');
+      const isDarkMode = document.body.classList.contains('dark-mode');
+      logo.src = isDarkMode ? '/static/img/logo-dark.png' : '/static/img/logo-light.png';
+    }
+  </script>
+  <script src="static/js/minibugicon.js"></script>
   <!-- Move inline script to external file -->
   <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
   <script src="{{ url_for('static', filename='js/google-auth.js') }}"></script>

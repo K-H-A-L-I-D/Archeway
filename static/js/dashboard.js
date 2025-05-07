@@ -152,10 +152,12 @@ function showJobForm(jobToEdit = null) {
   document.getElementById('jobDeadline').value = '';
   document.getElementById('jobDesc').value = '';
   document.getElementById('jobTags').value = '';
-  
+  document.getElementById('jobLocationType').value = jobToEdit?.location_type || 'in-person';
+  document.getElementById('jobStatus').value = jobToEdit?.status || 'Saved';
+
   // Change form title based on whether we're editing or adding
   document.getElementById('formTitle').textContent = jobToEdit ? 'Edit Job' : 'Add New Job';
-  
+
   // If editing, fill the form with job data
   if (jobToEdit) {
     document.getElementById('jobTitle').value = jobToEdit.title || '';
@@ -164,12 +166,12 @@ function showJobForm(jobToEdit = null) {
     document.getElementById('jobLocation').value = jobToEdit.location || '';
     document.getElementById('jobDeadline').value = jobToEdit.deadline ? jobToEdit.deadline.split('T')[0] : '';
     document.getElementById('jobDesc').value = jobToEdit.description || '';
+
     let tagList = Array.isArray(jobToEdit.tags)
-    ? jobToEdit.tags
-    : (jobToEdit.tags || '').split(',').map(tag => tag.trim()).filter(tag => tag);
-  
+      ? jobToEdit.tags
+      : (jobToEdit.tags || '').split(',').map(tag => tag.trim()).filter(tag => tag);
+
     document.getElementById('jobTags').value = tagList.join(', ');
-  
 
     // Store the job ID for editing
     document.getElementById('submitJobBtn').dataset.editId = jobToEdit.id;
@@ -177,11 +179,12 @@ function showJobForm(jobToEdit = null) {
     // Clear edit ID if adding new job
     delete document.getElementById('submitJobBtn').dataset.editId;
   }
-  
+
   // Show the form with animation
   document.getElementById('jobForm').classList.remove('hidden');
   document.getElementById('jobForm').classList.add('animate-fade-in');
 }
+
 
 function showJobModal(job) {
   document.getElementById('modalJobTitle').textContent = job.title;
@@ -229,6 +232,9 @@ async function submitJob() {
   const deadline = document.getElementById('jobDeadline').value;
   const description = document.getElementById('jobDesc').value.trim();
   const tagsString = document.getElementById('jobTags').value.trim();
+  const locationType = document.getElementById('jobLocationType').value;
+  const status = document.getElementById('jobStatus').value;
+
   
   // Validate required fields
   if (!title || !description) {
@@ -247,10 +253,12 @@ async function submitJob() {
     location,
     deadline,
     description,
-    notes: tags.join(','), // optional storage field
-    tags: tags.join(','),   // ensure this is available explicitly
-    status: 'Saved'
+    notes: tags.join(','),
+    tags: tags.join(','),
+    location_type: locationType,
+    status: status
   };
+  
   
   try {
     // Check if we're editing an existing job
@@ -439,6 +447,11 @@ function renderJobsList(jobs) {
               : '<span class="no-tags">No tags</span>'
         }
       </div>
+      <div class="job-meta">
+        <span class="location-type">${job.location_type || 'N/A'}</span> •
+        <span class="job-status">${job.status || 'Saved'}</span>
+      </div>
+
       <div class="job-footer">
         <span class="job-date">Added on ${createdDate}</span>
         <div class="job-actions">
@@ -449,6 +462,9 @@ function renderJobsList(jobs) {
             <i class="fas fa-trash-alt"></i>
           </button>
         </div>
+      </div>
+
+
       </div>
     `;
   

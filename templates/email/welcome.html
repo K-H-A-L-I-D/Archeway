@@ -1,0 +1,26 @@
+def send_welcome_email(user_email, first_name):
+    msg = Message('Welcome to Archeway!', recipients=[user_email])
+    
+    # Plain text fallback
+    msg.body = f"Hi {first_name}, Thank you for joining Archeway!"
+    
+    # HTML version
+    msg.html = f'''
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background-color: #2563eb; padding: 20px; text-align: center;">
+            <h1 style="color: white; margin: 0;">Welcome to Archeway!</h1>
+        </div>
+        <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
+            <p>Hi {first_name},</p>
+            <p>Thank you for joining Archeway! We're excited to help you manage your internship journey.</p>
+            <p>Get started by adding your first job application or browsing available opportunities.</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="https://archeway.net/dashboard" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Go to Dashboard</a>
+            </div>
+            <p>If you have any questions, please reply to this email.</p>
+            <p>Best regards,<br>The Archeway Team</p>
+        </div>
+    </div>
+    '''
+    
+    mail.send(msg)

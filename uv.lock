@@ -152,9 +152,11 @@ dependencies = [
     { name = "flask" },
     { name = "flask-bcrypt" },
     { name = "flask-dance" },
+    { name = "flask-mail" },
     { name = "flask-requests" },
     { name = "flask-restful" },
     { name = "flask-session" },
+    { name = "itsdangerous" },
     { name = "pyodbc" },
     { name = "python-dotenv" },
 ]
@@ -165,9 +167,11 @@ requires-dist = [
     { name = "flask", specifier = ">=3.1.0" },
     { name = "flask-bcrypt", specifier = ">=1.0.1" },
     { name = "flask-dance", specifier = ">=7.1.0" },
+    { name = "flask-mail", specifier = ">=0.10.0" },
     { name = "flask-requests", specifier = ">=0.0.14" },
     { name = "flask-restful", specifier = ">=0.3.10" },
     { name = "flask-session", specifier = ">=0.8.0" },
+    { name = "itsdangerous", specifier = ">=2.2.0" },
     { name = "pyodbc", specifier = ">=5.2.0" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
 ]
@@ -227,6 +231,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d7/b3/38aff96fbafe850f7f4186dc06e96ebc29625d68d1427ad65c9d41c4ec9e/flask_dance-7.1.0.tar.gz", hash = "sha256:6d0510e284f3d6ff05af918849791b17ef93a008628ec33f3a80578a44b51674", size = 140993 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/75/8c/4125e9f1196e5ab9675d38ff445ae4abd7085aba7551335980ac19196389/flask_dance-7.1.0-py3-none-any.whl", hash = "sha256:81599328a2b3604fd4332b3d41a901cf36980c2067e5e38c44ce3b85c4e1ae9c", size = 62176 },
+]
+
+[[package]]
+name = "flask-mail"
+version = "0.10.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "blinker" },
+    { name = "flask" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ba/29/e92dc84c675d1e8d260d5768eb3fb65c70cbd33addecf424187587bee862/flask_mail-0.10.0.tar.gz", hash = "sha256:44083e7b02bbcce792209c06252f8569dd5a325a7aaa76afe7330422bd97881d", size = 8152 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e4/c0/a81083da779f482494d49195d8b6c9fde21072558253e4a9fb2ec969c3c1/flask_mail-0.10.0-py3-none-any.whl", hash = "sha256:a451e490931bb3441d9b11ebab6812a16bfa81855792ae1bf9c1e1e22c4e51e7", size = 8529 },
 ]
 
 [[package]]

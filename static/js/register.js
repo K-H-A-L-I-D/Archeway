@@ -101,9 +101,17 @@ function validateNames(ids) {
 }
 
 async function registerCallback(response) {
+  // Reset the button state
+  const submitButton = document.querySelector('button[type="submit"]');
+  const originalButtonText = "CREATE ACCOUNT";
+
   const result = await response.json();
 
   if (!response.ok) {
+    // Reset button state
+    submitButton.innerHTML = originalButtonText;
+    submitButton.disabled = false;
+    
     // Check if it's a known email error
     if (result.message.toLowerCase().includes("email")) {
       setError(document.getElementById("email"), result.message);
@@ -115,8 +123,24 @@ async function registerCallback(response) {
     return;
   }
 
-  alert("Registration successful! Redirecting...");
-  window.location.href = "/signin";
+  // Show success modal with countdown (no need to reset button here as page will redirect)
+  const modal = document.getElementById("successModal");
+  const countdownEl = document.getElementById("countdown");
+  let count = 3;
+  
+  // Display the modal
+  modal.style.display = "flex";
+  
+  // Start countdown
+  const countdownInterval = setInterval(() => {
+    count--;
+    countdownEl.textContent = count;
+    
+    if (count <= 0) {
+      clearInterval(countdownInterval);
+      window.location.href = "/signin";
+    }
+  }, 1000);
 }
 
 // We validate the register form here
