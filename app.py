@@ -111,7 +111,6 @@ The Archeway Team
         print(f"Failed to send welcome email: {str(e)}")
         return False
     
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
@@ -470,7 +469,7 @@ def check_email():
     return {"exists": bool(result)}, 200
 
 # API endpoints
-@addResource("/api/register")
+@addResource("/api/registration")
 class Register(Resource):
     decorators = [limiter.limit("5 per minute")]  # Limit registration attempts
     
