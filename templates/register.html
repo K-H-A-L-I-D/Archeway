@@ -32,12 +32,13 @@
       <div class="error-message">{{ error }}</div>
       {% endif %}
 
-      <form id="registerForm" action="javascript:void(0);">
+      <form id="registerForm" action="/api/register" method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
           <div class="input-group modern">
             <i class="fas fa-user"></i>
             <input type="text" id="firstName" name="firstName" placeholder="First Name" required>
+            <div class="invalid-feedback"></div>
           </div>
         </div>
 
@@ -45,6 +46,7 @@
           <div class="input-group modern">
             <i class="fas fa-user"></i>
             <input type="text" id="lastName" name="lastName" placeholder="Last Name" required>
+            <div class="invalid-feedback"></div>
           </div>
         </div>
 
@@ -52,6 +54,7 @@
           <div class="input-group modern">
             <i class="fas fa-envelope"></i>
             <input type="email" id="email" name="email" placeholder="Email" required>
+            <div class="invalid-feedback"></div>
           </div>
         </div>
 
@@ -59,9 +62,10 @@
           <div class="input-group modern">
             <i class="fas fa-lock"></i>
             <input type="password" id="password" name="password" placeholder="Password" required minlength="8">
-            <span class="toggle-password" onclick="togglePasswordVisibility('password')">
+            <span class="toggle-password" id="togglePassword">
               <i class="fas fa-eye"></i>
             </span>
+            <div class="invalid-feedback"></div>
           </div>
           <small class="form-hint">Password must be at least 8 characters long</small>
         </div>
@@ -70,13 +74,24 @@
           <div class="input-group modern">
             <i class="fas fa-lock"></i>
             <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password" required>
-            <span class="toggle-password" onclick="togglePasswordVisibility('confirmPassword')">
+            <span class="toggle-password" id="toggleConfirmPassword">
               <i class="fas fa-eye"></i>
             </span>
+            <div class="invalid-feedback"></div>
           </div>
         </div>
 
         <button type="submit" class="btn btn-primary btn-block modern">CREATE ACCOUNT</button>
+        
+        <div class="divider">
+          <span>Or Sign Up With</span>
+        </div>
+        
+        <div class="social-signin">
+          <a href="/login/google" class="btn social-btn google">
+            <i class="fab fa-google"></i>
+          </a>
+        </div>
       </form>
 
       <div class="auth-footer">
@@ -85,49 +100,8 @@
     </div>
   </div>
 
-  <script>
-    // Check if dark mode is saved in localStorage and update accordingly
-    document.addEventListener('DOMContentLoaded', function() {
-      if (localStorage.getItem('darkMode') === 'enabled') {
-        document.body.classList.add('dark-mode');
-        updateLogoForTheme();
-      }
-    });
-    
-    function updateLogoForTheme() {
-      const logo = document.getElementById('registerLogo');
-      const isDarkMode = document.body.classList.contains('dark-mode');
-      logo.src = isDarkMode ? '/static/img/logo-dark.png' : '/static/img/logo-light.png';
-    }
-    
-    // Password visibility toggle
-    function togglePasswordVisibility(inputId) {
-      const passwordInput = document.getElementById(inputId);
-      const visibilityIcon = document.querySelector(`#${inputId} + .toggle-password i`);
-      
-      if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        visibilityIcon.classList.remove('fa-eye');
-        visibilityIcon.classList.add('fa-eye-slash');
-      } else {
-        passwordInput.type = 'password';
-        visibilityIcon.classList.remove('fa-eye-slash');
-        visibilityIcon.classList.add('fa-eye');
-      }
-    }
-    
-    // Form validation
-    document.querySelector('form').addEventListener('submit', function(e) {
-      const password = document.getElementById('password').value;
-      const confirmPassword = document.getElementById('confirmPassword').value;
-      
-      if (password !== confirmPassword) {
-        e.preventDefault();
-        alert('Passwords do not match');
-      }
-    });
-  </script>
+  <!-- External scripts -->
   <script src="{{ url_for('static', filename='js/register.js') }}"></script>
-  <script src="static/js/minibugicon.js"></script>
+  <script src="{{ url_for('static', filename='js/minibugicon.js') }}"></script>
 </body>
 </html>

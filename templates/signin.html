@@ -49,7 +49,7 @@
           <div class="input-group modern">
             <i class="fas fa-lock"></i>
             <input type="password" id="password" name="password" placeholder="Password" required>
-            <span class="toggle-password" onclick="togglePasswordVisibility()">
+            <span class="toggle-password" id="togglePassword">
               <i class="fas fa-eye"></i>
             </span>
           </div>
@@ -70,9 +70,13 @@
         </div>
         
         <div class="social-signin">
-          <button type="button" class="btn social-btn google" onclick="window.location.href='/login/google';">
+          <!-- Option 1: Server-side approach -->
+          <a href="/login/google" class="btn social-btn google">
             <i class="fab fa-google"></i>
-          </button>
+          </a>
+          
+          <!-- Option 2: Client-side approach with Google Identity Services -->
+          <div id="google-signin-button" style="display: none;"></div>
         </div>
       </form>
       
@@ -82,37 +86,9 @@
     </div>
   </div>
 
-  <script>
-    // Check if dark mode is saved in localStorage and update accordingly
-    document.addEventListener('DOMContentLoaded', function() {
-      if (localStorage.getItem('darkMode') === 'enabled') {
-        document.body.classList.add('dark-mode');
-        updateLogoForTheme();
-      }
-    });
-    
-    function updateLogoForTheme() {
-      const logo = document.getElementById('signinLogo');
-      const isDarkMode = document.body.classList.contains('dark-mode');
-      logo.src = isDarkMode ? '/static/img/logo-dark.png' : '/static/img/logo-light.png';
-    }
-    
-    // Password visibility toggle
-    function togglePasswordVisibility() {
-      const passwordInput = document.getElementById('password');
-      const visibilityIcon = document.querySelector('.toggle-password i');
-      
-      if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        visibilityIcon.classList.remove('fa-eye');
-        visibilityIcon.classList.add('fa-eye-slash');
-      } else {
-        passwordInput.type = 'password';
-        visibilityIcon.classList.remove('fa-eye-slash');
-        visibilityIcon.classList.add('fa-eye');
-      }
-    }
-  </script>
-  <script src="static/js/minibugicon.js"></script>
+  <!-- Move inline script to external file -->
+  <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/google-auth.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/minibugicon.js') }}"></script>
 </body>
 </html>
