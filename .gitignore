@@ -20,3 +20,9 @@ flask_session/
 
 # app log
 *.log
+
+# Archives
+storage/
+
+# pip fetcher
+get-pip.py
