@@ -27,3 +27,5 @@ flask-wtf>=1.2.1
 flask-limiter==3.3.0
 flask-sqlalchemy>=3.0.3
 gunicorn>=20.1.0
+google-auth==2.40.1
+google-auth-oauthlib==1.2.2

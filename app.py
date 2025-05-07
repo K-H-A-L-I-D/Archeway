@@ -249,7 +249,7 @@ def check_api_auth():
 @app.after_request
 def add_security_headers(response):
     # Content Security Policy
-    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://accounts.google.com; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; img-src 'self' data:; font-src 'self' https://cdnjs.cloudflare.com; frame-src 'self' https://accounts.google.com; connect-src 'self' https://accounts.google.com;"
+    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://accounts.google.com; style-src 'self' https://cdnjs.cloudflare.com https://accounts.google.com 'unsafe-inline'; img-src 'self' data:; font-src 'self' https://cdnjs.cloudflare.com; frame-src 'self' https://accounts.google.com; connect-src 'self' https://accounts.google.com;"
     
     # Prevent browsers from interpreting files as a different MIME type
     response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -469,7 +469,7 @@ def check_email():
     return {"exists": bool(result)}, 200
 
 # API endpoints
-@addResource("/api/registration")
+@addResource("/api/register")
 class Register(Resource):
     decorators = [limiter.limit("5 per minute")]  # Limit registration attempts
     

@@ -1,90 +1,17 @@
 // Authentication-related JavaScript for sign-in page
+console.log("signin.js loaded");
 
 document.addEventListener('DOMContentLoaded', function() {
   // Check if dark mode is saved in localStorage
   if (localStorage.getItem('darkMode') === 'enabled') {
     document.body.classList.add('dark-mode');
+    updateLogoForTheme();
   }
-
-  // Get CSRF token from meta tag
-  function getCSRFToken() {
-    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-  }
-
-  // Handle form submission
-  const signinForm = document.querySelector('form');
-  if (signinForm) {
-    signinForm.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      
-      // Show loading wheel and disable the button
-      const submitButton = document.querySelector('button[type="submit"]');
-      const originalButtonText = submitButton.innerHTML;
-      submitButton.innerHTML = '<div class="spinner"></div> Signing in...';
-      submitButton.disabled = true;
-      
-      // Prepare login data
-      const loginData = {
-        email: document.getElementById('email').value,
-        password: document.getElementById('password').value
-      };
-      
-      try {
-        // Send login request with CSRF token
-        const response = await fetch('/api/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCSRFToken()
-          },
-          body: JSON.stringify(loginData)
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-          // Store user info in localStorage for persistent login
-          localStorage.setItem('userId', data.userId);
-          localStorage.setItem('displayName', data.displayName);
-          
-          // Remember me functionality
-          if (document.getElementById('remember') && document.getElementById('remember').checked) {
-            localStorage.setItem('rememberedEmail', loginData.email);
-          } else {
-            localStorage.removeItem('rememberedEmail');
-          }
-          
-          // Redirect to dashboard on success
-          window.location.href = '/dashboard';
-          // Note: No need to reset the button since we're redirecting
-        } else {
-          // Reset button state
-          submitButton.innerHTML = originalButtonText;
-          submitButton.disabled = false;
-          
-          // Show error message
-          const errorElement = document.createElement('div');
-          errorElement.className = 'error-message';
-          errorElement.textContent = data.message || 'Login failed';
-          
-          // Remove any existing error messages
-          const existingError = document.querySelector('.error-message');
-          if (existingError) {
-            existingError.remove();
-          }
-          
-          // Insert error message at the top of the form
-          signinForm.insertBefore(errorElement, signinForm.firstChild);
-        }
-      } catch (error) {
-        // Reset button state
-        submitButton.innerHTML = originalButtonText;
-        submitButton.disabled = false;
-        
-        console.error('Login error:', error);
-        alert('Login failed: ' + error.message);
-      }
-    });
+  
+  // Add event listener for password toggle
+  const togglePassword = document.getElementById('togglePassword');
+  if (togglePassword) {
+    togglePassword.addEventListener('click', togglePasswordVisibility);
   }
 
   // Fill in remembered email if available
@@ -99,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Handle password visibility toggle
 function togglePasswordVisibility() {
+  console.log("Toggle password clicked");
   const passwordInput = document.getElementById('password');
   const visibilityIcon = document.querySelector('.toggle-password i');
   
@@ -111,4 +39,10 @@ function togglePasswordVisibility() {
     visibilityIcon.classList.remove('fa-eye-slash');
     visibilityIcon.classList.add('fa-eye');
   }
+}
+
+function updateLogoForTheme() {
+  const logo = document.getElementById('signinLogo');
+  const isDarkMode = document.body.classList.contains('dark-mode');
+  logo.src = isDarkMode ? '/static/img/logo-dark.png' : '/static/img/logo-light.png';
 }
