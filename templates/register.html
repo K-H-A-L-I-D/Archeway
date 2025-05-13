@@ -29,7 +29,6 @@
       align-items: center;
       justify-content: center;
     }
-
     .success-modal-content {
       background-color: white;
       padding: 30px;
@@ -39,23 +38,19 @@
       max-width: 400px;
       width: 90%;
     }
-
     .dark-mode .success-modal-content {
       background-color: #222;
       color: #fff;
     }
-
     .success-icon {
       font-size: 60px;
       color: #4CAF50;
       margin-bottom: 20px;
     }
-
     .success-title {
       font-size: 24px;
       margin-bottom: 10px;
     }
-
     /* Make the auth card a bit wider */
     .auth-card {
       max-width: 500px !important;
@@ -74,29 +69,27 @@
       border-top-color: #fff;
       animation: spin 1s ease-in-out infinite;
     }
-
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-
     /* When in dark mode, adjust spinner colors */
     .dark-mode .spinner {
       border-color: rgba(0, 0, 0, 0.2);
       border-top-color: #333;
     }
-
     /* Disabled button styles */
     button:disabled {
       opacity: 0.7;
       cursor: not-allowed;
     }
-
     /* Add space for the spinner inside the button */
     .btn-primary.modern {
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 44px;
+      background-color: #4361ee; /* Blue color for the button */
+      color: white; /* White text */
     }
   </style>
 </head>
@@ -163,6 +156,13 @@
             </span>
             <div class="invalid-feedback"></div>
           </div>
+        </div>
+        
+        <div style="text-align: center; margin: 10px 0;">
+          <label style="display: inline-flex; align-items: center;">
+            <input type="checkbox" id="newsletter" name="newsletter">
+            <small class="form-hint" style="margin-left: 4px;">Subscribe to our newsletter to be notified when we reach production!</small>
+          </label>
         </div>
 
         <div class="form-group" style="margin-bottom: 1.5rem; text-align: center;">

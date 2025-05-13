@@ -61,9 +61,9 @@ def send_test_email():
     success = send_welcome_email(test_email, first_name)
 
     if success:
-        flash(f"✅ Test email sent to {test_email}", "success")
+        flash(f" Test email sent to {test_email}", "success")
     else:
-        flash("❌ Failed to send test email", "danger")
+        flash(" Failed to send test email", "danger")
 
     return redirect(url_for("dashboard"))
 
@@ -249,8 +249,15 @@ def check_api_auth():
 @app.after_request
 def add_security_headers(response):
     # Content Security Policy
-    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://accounts.google.com; style-src 'self' https://cdnjs.cloudflare.com https://accounts.google.com 'unsafe-inline'; img-src 'self' data:; font-src 'self' https://cdnjs.cloudflare.com; frame-src 'self' https://accounts.google.com; connect-src 'self' https://accounts.google.com;"
-    
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.tailwindcss.com https://accounts.google.com; "
+        "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.tailwindcss.com https://accounts.google.com; "
+        "img-src 'self' data:; "
+        "font-src 'self' https://cdnjs.cloudflare.com; "
+        "frame-src 'self' https://accounts.google.com https://trex-runner.com; "
+        "connect-src 'self' https://accounts.google.com https://formspree.io;"
+    )
     # Prevent browsers from interpreting files as a different MIME type
     response.headers['X-Content-Type-Options'] = 'nosniff'
     
@@ -305,18 +312,18 @@ def google_login():
 @app.route("/auth/callback")
 @limiter.limit("5 per minute")
 def google_callback():
-    print("✅ /auth/callback HIT")
-    print("🧪 Session before:", dict(session))
+    print(" /auth/callback HIT")
+    print(" Session before:", dict(session))
 
     token = session.get("google_oauth_token")
     if not token or "access_token" not in token:
-        print("❌ No token found")
+        print(" No token found")
         return redirect(url_for("signin"))
 
     try:
         resp = google.get("https://www.googleapis.com/oauth2/v2/userinfo")
         if not resp.ok:
-            print("❌ Failed to get user info")
+            print(" Failed to get user info")
             return redirect(url_for("signin"))
 
         user_info = resp.json()
@@ -325,7 +332,7 @@ def google_callback():
         # Sanitize user info from Google
         email = sanitize_email(user_info.get("email"))
         if not email:
-            print("❌ Invalid email from Google")
+            print(" Invalid email from Google")
             return redirect(url_for("signin", error="Invalid email from Google OAuth"))
             
         firstname = sanitize_string(user_info.get("given_name", ""))
@@ -366,11 +373,11 @@ def google_callback():
             conn.commit()
         
         session.modified = True
-        print("✅ Session after login:", dict(session))
+        print(" Session after login:", dict(session))
         return redirect(url_for("dashboard"))
 
     except Exception as e:
-        print("❌ Error during callback:", str(e))
+        print(" Error during callback:", str(e))
         return redirect(url_for("signin"))
 
 # Define addResource function
@@ -444,9 +451,9 @@ def test_db():
             cursor = conn.cursor()
             cursor.execute("SELECT 1")
             result = cursor.fetchone()
-            return f"✅ DB connected, result: {result}"
+            return f" DB connected, result: {result}"
     except Exception as e:
-        return f"❌ DB connection failed: {str(e)}"
+        return f" DB connection failed: {str(e)}"
 
 
 @app.route("/signout")
@@ -491,7 +498,8 @@ class Register(Resource):
         firstname = sanitize_string(data.get("firstName"))
         lastname = sanitize_string(data.get("lastName"))
         email = sanitize_email(data.get("email"))
-        # Don't sanitize password before hashing
+        # Newsletter subscription status
+        newsletter = data.get("newsletter", False)
 
         # Validate email format
         if not email:
@@ -514,6 +522,17 @@ class Register(Resource):
                     "INSERT INTO dbo.accounts (firstname, lastname, email, password) VALUES (?, ?, ?, ?)",
                     (firstname, lastname, email, hashed_password)
                 )
+                
+                # Get the newly created user ID
+                user_id = cursor.execute("SELECT @@IDENTITY").fetchval()
+                
+                # Add to email list if newsletter is checked
+                if newsletter:
+                    cursor.execute(
+                        "INSERT INTO dbo.Email_List (userId, firstName, email, isChecked) VALUES (?, ?, ?, ?)",
+                        (user_id, firstname, email, True)
+                    )
+                
                 conn.commit()
             except pyodbc.Error as e:
                 return {"message": f"Database error: {str(e)}"}, 500
@@ -620,6 +639,7 @@ class Jobs(Resource):
                 tags_str,
                 sanitized_data.get("deadline"),
                 sanitized_data.get("status", "Saved"),
+                sanitized_data.get("location_type"),
                 sanitized_data.get("date_applied") or datetime.now().isoformat()
             ))
 

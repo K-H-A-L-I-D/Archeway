@@ -15,6 +15,19 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    /* Add this style to fix the button color */
+    .btn-primary.modern {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 44px;
+      background-color: #4361ee; /* Blue color for the button */
+      color: white; /* White text */
+    }
+  </style>
+
+
 </head>
 <body class="auth-page">
   <div class="auth-container">

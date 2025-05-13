@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}Archeway{% endblock %}</title>
+  <link rel="preload" href="{{ url_for('static', filename='img/logo-light.png') }}" as="image">
+  <link rel="preload" href="{{ url_for('static', filename='img/logo-dark.png') }}" as="image">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+  
+  <!-- Global CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-fix.css') }}"> 
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+        :root {
+    --primary-color: #4361ee;
+    --secondary-color: #06d6a0;
+    --warning-color: #ffd166;
+    --danger-color: #ef476f;
+    --text-color: #333;
+    --text-light: #6b7280;
+    --bg-color: #f8f9fa;
+    --card-bg: #fff;
+    --border-color: #e5e7eb;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    body.dark-mode {
+    --primary-color: #4361ee;
+    --secondary-color: #06d6a0;
+    --warning-color: #ffd166;
+    --danger-color: #ef476f;
+    --text-color: #e0e0e0;
+    --text-light: #9ca3af;
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --border-color: #2d2d2d;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+  </style>
+  
+  <!-- Additional CSS for specific templates -->
+  {% block head %}{% endblock %}
+</head>
+<body>
+  {% block body %}
+  {% block content %}{% endblock %}
+  {% endblock %}
+  
+  <!-- Global Scripts -->
+  <script src="{{ url_for('static', filename='js/form-validation-utils.js') }}"></script>
+  
+  <!-- Page-specific Scripts -->
+  {% block scripts %}{% endblock %}
+</body>
+</html>

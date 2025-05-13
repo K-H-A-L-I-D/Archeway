@@ -1,164 +1,727 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>Dashboard - Archeway</title>
-  <link rel="preload" href="/static/img/logo-light.png" as="image">
-  <link rel="preload" href="/static/img/logo-dark.png" as="image">
-  <!-- Updated CSS references -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/cards.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
-  <header>
-    <div class="logo">
-      <a href="/" title="Go to Homepage">
-        <img id="archewayLogo" src="/static/img/logo-light.png" alt="Archeway Logo" class="logo-img">
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Archeway{% endblock %}
+
+{% block head %}
+<!-- Additional CSS for the dashboard -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/widgets.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/kanban.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/job-listings.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="/" class="logo-container">
+        <img id="sidebarLogo" src="{{ url_for('static', filename='img/logo-light.png') }}" alt="Archeway Logo" class="logo-img">
       </a>
-    </div>    
-    <div class="header-actions">
-      <button id="toggleDarkMode" class="btn btn-icon dark-mode-toggle">
-        <i class="fas fa-moon"></i>
-      </button> 
-      <a href="/signout" class="btn btn-outline-danger">Sign Out</a>
-    </div>
-  </header>
-
-  <main>
-    <div class="search-container">
-      <div class="search-bar">
-        <i class="fas fa-search"></i>
-        <input type="text" id="searchInput" placeholder="Search jobs...">
-      </div>
-      <div class="filter-dropdown">
-        <select id="filterType">
-          <option value="all">All Types</option>
-          <option value="full-time">Full-time</option>
-          <option value="part-time">Part-time</option>
-          <option value="internship">Internship</option>
-          <option value="freelance">Freelance</option>
-        </select>
-      </div>
-      <div class="sort-dropdown">
-        <select id="sortBy">
-          <option value="newest">Newest first</option>
-          <option value="oldest">Oldest first</option>
-          <option value="deadline">Deadline (soonest)</option>
-          <option value="title">Title (A-Z)</option>
-          <option value="company">Company (A-Z)</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="add-job-container">
-      <button id="addNewJobBtn" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Add New Job
+      <button id="toggleSidebar" class="toggle-sidebar">
+        <i class="fas fa-chevron-left"></i>
       </button>
     </div>
 
-    <!-- Job Form (initially hidden) -->
-    <div id="jobForm" class="hidden">
-      <div class="form-card">
-        <h3 id="formTitle">Add New Job</h3>
-    
-        <div class="form-group">
-          <label for="jobTitle">Job Title</label>
-          <input type="text" id="jobTitle" placeholder="e.g. Software Developer" required>
+    <div class="sidebar-user">
+      <div class="user-avatar">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="user-info">
+        <h4>{{ user_name }}</h4>
+        <span class="user-status">Job Seeker</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <h4 class="nav-title">MAIN NAVIGATION</h4>
+        <ul class="nav-links">
+          <li class="nav-item active">
+            <a href="{{ url_for('dashboard') }}">
+              <i class="fas fa-chart-pie"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('dashboard') }}?view=applications">
+              <i class="fas fa-briefcase"></i>
+              <span>My Applications</span>
+              <span class="badge">{{ application_count|default('0') }}</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('dashboard') }}?view=kanban">
+              <i class="fas fa-columns"></i>
+              <span>Kanban Board</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('dashboard') }}?view=calendar">
+              <i class="fas fa-calendar-alt"></i>
+              <span>Calendar</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="nav-section">
+        <h4 class="nav-title">TOOLS</h4>
+        <ul class="nav-links">
+          <li class="nav-item">
+            <a href="{{ url_for('dashboard') }}?view=analytics">
+              <i class="fas fa-chart-line"></i>
+              <span>Analytics</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('dashboard') }}?view=documents">
+              <i class="fas fa-file-alt"></i>
+              <span>Documents</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="nav-section">
+        <h4 class="nav-title">SETTINGS</h4>
+        <ul class="nav-links">
+          <li class="nav-item">
+            <a href="{{ url_for('dashboard') }}?view=profile">
+              <i class="fas fa-user-cog"></i>
+              <span>Profile</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('dashboard') }}?view=settings">
+              <i class="fas fa-cog"></i>
+              <span>Settings</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('signout') }}">
+              <i class="fas fa-sign-out-alt"></i>
+              <span>Logout</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button id="toggleDarkMode" class="btn btn-icon dark-mode-toggle">
+        <i class="fas fa-moon"></i>
+      </button>
+      <div class="version">Archeway v1.0</div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <header class="content-header">
+      <h1 class="content-title">Dashboard</h1>
+      <div class="header-actions">
+        <div class="search-container">
+          <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search jobs...">
+            <button class="search-bar-clear" id="clearSearch">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
         </div>
-    
-        <div class="form-group">
-          <label for="jobCompany">Company</label>
-          <input type="text" id="jobCompany" placeholder="e.g. Tech Company Inc.">
+        <button id="addNewJobBtn" class="btn btn-primary">
+          <i class="fas fa-plus"></i> Add Job
+        </button>
+      </div>
+    </header>
+
+    <!-- Dashboard View Section -->
+    <section id="dashboardView" class="dashboard-view">
+      <!-- Statistics Cards Row -->
+      <div class="stats-row">
+        <div class="stats-card">
+          <div class="stats-icon" style="background-color: rgba(67, 97, 238, 0.1);">
+            <i class="fas fa-briefcase" style="color: #4361ee;"></i>
+          </div>
+          <div class="stats-info">
+            <h3 class="stats-value">{{ total_jobs|default('0') }}</h3>
+            <p class="stats-label">Total Jobs</p>
+          </div>
+          <div class="stats-chart">
+            <div class="chart-bar" style="height: 70%;"></div>
+            <div class="chart-bar" style="height: 50%;"></div>
+            <div class="chart-bar" style="height: 90%;"></div>
+            <div class="chart-bar" style="height: 60%;"></div>
+          </div>
         </div>
-    
-        <div class="form-group">
-          <label for="jobType">Job Type</label>
-          <select id="jobType">
-            <option value="full-time">Full-time</option>
-            <option value="part-time">Part-time</option>
-            <option value="internship">Internship</option>
-            <option value="freelance">Freelance</option>
-          </select>
+
+        <div class="stats-card">
+          <div class="stats-icon" style="background-color: rgba(239, 71, 111, 0.1);">
+            <i class="fas fa-paper-plane" style="color: #ef476f;"></i>
+          </div>
+          <div class="stats-info">
+            <h3 class="stats-value">{{ applied_jobs|default('0') }}</h3>
+            <p class="stats-label">Applied</p>
+          </div>
+          <div class="stats-chart">
+            <div class="chart-bar" style="height: 50%;"></div>
+            <div class="chart-bar" style="height: 80%;"></div>
+            <div class="chart-bar" style="height: 40%;"></div>
+            <div class="chart-bar" style="height: 70%;"></div>
+          </div>
         </div>
-    
-        <div class="form-group">
-          <label for="jobLocation">Location</label>
-          <input type="text" id="jobLocation" placeholder="e.g. New York, NY">
+
+        <div class="stats-card">
+          <div class="stats-icon" style="background-color: rgba(255, 209, 102, 0.1);">
+            <i class="fas fa-user-tie" style="color: #ffd166;"></i>
+          </div>
+          <div class="stats-info">
+            <h3 class="stats-value">{{ interview_jobs|default('0') }}</h3>
+            <p class="stats-label">Interviews</p>
+          </div>
+          <div class="stats-chart">
+            <div class="chart-bar" style="height: 30%;"></div>
+            <div class="chart-bar" style="height: 60%;"></div>
+            <div class="chart-bar" style="height: 20%;"></div>
+            <div class="chart-bar" style="height: 40%;"></div>
+          </div>
         </div>
-    
-        <div class="form-group">
-          <label for="jobLocationType">Location Type</label>
-          <select id="jobLocationType">
-            <option value="in-person">In-person</option>
-            <option value="remote">Remote</option>
-            <option value="hybrid">Hybrid</option>
-          </select>
+
+        <div class="stats-card">
+          <div class="stats-icon" style="background-color: rgba(6, 214, 160, 0.1);">
+            <i class="fas fa-check-circle" style="color: #06d6a0;"></i>
+          </div>
+          <div class="stats-info">
+            <h3 class="stats-value">{{ offer_jobs|default('0') }}</h3>
+            <p class="stats-label">Offers</p>
+          </div>
+          <div class="stats-chart">
+            <div class="chart-bar" style="height: 20%;"></div>
+            <div class="chart-bar" style="height: 10%;"></div>
+            <div class="chart-bar" style="height: 15%;"></div>
+            <div class="chart-bar" style="height: 25%;"></div>
+          </div>
         </div>
-    
-        <div class="form-group">
-          <label for="jobStatus">Application Status</label>
-          <select id="jobStatus">
-            <option value="Saved">Saved</option>
-            <option value="Applied">Applied</option>
-            <option value="Interviewed">Interviewed</option>
-            <option value="Offered">Offered</option>
-            <option value="Rejected">Rejected</option>
-          </select>
+      </div>
+
+      <!-- Jobs Pipeline Chart -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3 class="chart-title">Application Pipeline</h3>
+          <div class="chart-actions">
+            <button class="btn btn-sm btn-outline">
+              <i class="fas fa-download"></i> Export
+            </button>
+            <select id="timeRangeSelect" class="form-select form-select-sm">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="all">All time</option>
+            </select>
+          </div>
         </div>
-    
-        <div class="form-group">
-          <label for="jobDeadline">Application Deadline</label>
-          <input type="date" id="jobDeadline">
+        <div class="chart-body">
+          <canvas id="applicationPipeline" width="400" height="200"></canvas>
         </div>
-    
+      </div>
+
+      <!-- Recent Jobs & Activities -->
+      <div class="dashboard-grid">
+        <div class="recent-jobs-card">
+          <div class="card-header">
+            <h3 class="card-title">Recent Applications</h3>
+            <a href="{{ url_for('dashboard') }}?view=applications" class="card-link">View All</a>
+          </div>
+          <div class="jobs-list">
+            <!-- Will be populated by JavaScript -->
+            <div class="loading-spinner">Loading recent jobs...</div>
+          </div>
+        </div>
+
+        <div class="upcoming-card">
+          <div class="card-header">
+            <h3 class="card-title">Upcoming Deadlines</h3>
+            <a href="{{ url_for('dashboard') }}?view=calendar" class="card-link">View Calendar</a>
+          </div>
+          <div class="deadlines-list">
+            <!-- Will be populated by JavaScript -->
+            <div class="loading-spinner">Loading deadlines...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Applications View Section (Initially Hidden) -->
+    <section id="applicationsView" class="view-section applications-view hidden">
+      <div class="filter-toolbar">
+        <div class="filter-dropdowns">
+          <div class="filter-group">
+            <label for="filterJobType">Job Type</label>
+            <select id="filterJobType" class="form-select">
+              <option value="all">All Types</option>
+              <option value="full-time">Full-time</option>
+              <option value="part-time">Part-time</option>
+              <option value="internship">Internship</option>
+              <option value="freelance">Freelance</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filterStatus">Status</label>
+            <select id="filterStatus" class="form-select">
+              <option value="all">All Status</option>
+              <option value="Saved">Saved</option>
+              <option value="Applied">Applied</option>
+              <option value="Interviewing">Interviewing</option>
+              <option value="Offered">Offered</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="sortBy">Sort By</label>
+            <select id="sortBy" class="form-select">
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="deadline">Deadline (soonest)</option>
+              <option value="title">Title (A-Z)</option>
+              <option value="company">Company (A-Z)</option>
+            </select>
+          </div>
+        </div>
+        <div class="view-switcher">
+          <button class="btn btn-icon view-btn active" data-view="grid">
+            <i class="fas fa-th-large"></i>
+          </button>
+          <button class="btn btn-icon view-btn" data-view="list">
+            <i class="fas fa-list"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Jobs Container -->
+      <div id="jobList" class="jobs-container grid-view">
+        <!-- Will be populated by JavaScript -->
+        <div class="loading-spinner">Loading jobs...</div>
+      </div>
+    </section>
+
+    <!-- Kanban Board View (Initially Hidden) -->
+    <section id="kanbanView" class="view-section kanban-view hidden">
+      <div class="kanban-board">
+        <div class="kanban-column" data-status="Saved">
+          <div class="column-header">
+            <h3>Saved</h3>
+            <span class="job-count" id="savedCount">0</span>
+          </div>
+          <div class="column-body" id="savedColumn">
+            <!-- Populated by JavaScript -->
+          </div>
+        </div>
+        
+        <div class="kanban-column" data-status="Applied">
+          <div class="column-header">
+            <h3>Applied</h3>
+            <span class="job-count" id="appliedCount">0</span>
+          </div>
+          <div class="column-body" id="appliedColumn">
+            <!-- Populated by JavaScript -->
+          </div>
+        </div>
+        
+        <div class="kanban-column" data-status="Interviewing">
+          <div class="column-header">
+            <h3>Interviewing</h3>
+            <span class="job-count" id="interviewingCount">0</span>
+          </div>
+          <div class="column-body" id="interviewingColumn">
+            <!-- Populated by JavaScript -->
+          </div>
+        </div>
+        
+        <div class="kanban-column" data-status="Offered">
+          <div class="column-header">
+            <h3>Offered</h3>
+            <span class="job-count" id="offeredCount">0</span>
+          </div>
+          <div class="column-body" id="offeredColumn">
+            <!-- Populated by JavaScript -->
+          </div>
+        </div>
+        
+        <div class="kanban-column" data-status="Rejected">
+          <div class="column-header">
+            <h3>Rejected</h3>
+            <span class="job-count" id="rejectedCount">0</span>
+          </div>
+          <div class="column-body" id="rejectedColumn">
+            <!-- Populated by JavaScript -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Calendar View (Initially Hidden) -->
+    <section id="calendarView" class="view-section calendar-view hidden">
+      <div class="calendar-header">
+        <div class="calendar-nav">
+          <button id="prevMonth" class="btn btn-icon">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <h3 id="currentMonthDisplay">May 2025</h3>
+          <button id="nextMonth" class="btn btn-icon">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+        <div class="calendar-actions">
+          <button id="todayBtn" class="btn btn-sm btn-outline">Today</button>
+          <div class="view-switcher">
+            <button class="btn btn-sm btn-outline active" data-calendar-view="month">Month</button>
+            <button class="btn btn-sm btn-outline" data-calendar-view="week">Week</button>
+            <button class="btn btn-sm btn-outline" data-calendar-view="day">Day</button>
+          </div>
+        </div>
+      </div>
+      <div class="calendar-container">
+        <div id="calendar">
+          <!-- Calendar will be rendered here by JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Analytics View (Initially Hidden) -->
+    <section id="analyticsView" class="view-section analytics-view hidden">
+      <div class="analytics-grid">
+        <div class="analytics-card">
+          <h3 class="analytics-title">Application Success Rate</h3>
+          <div class="analytics-chart">
+            <canvas id="successRateChart"></canvas>
+          </div>
+        </div>
+        
+        <div class="analytics-card">
+          <h3 class="analytics-title">Applications by Job Type</h3>
+          <div class="analytics-chart">
+            <canvas id="jobTypeChart"></canvas>
+          </div>
+        </div>
+        
+        <div class="analytics-card">
+          <h3 class="analytics-title">Application Timeline</h3>
+          <div class="analytics-chart">
+            <canvas id="timelineChart"></canvas>
+          </div>
+        </div>
+        
+        <div class="analytics-card">
+          <h3 class="analytics-title">Application Sources</h3>
+          <div class="analytics-chart">
+            <canvas id="sourcesChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Profile View (Initially Hidden) -->
+    <section id="profileView" class="view-section profile-view hidden">
+      <div class="profile-card">
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <i class="fas fa-user"></i>
+          </div>
+          <div class="profile-info">
+            <h2 class="profile-name">{{ user_name }}</h2>
+            <p class="profile-email">{{ user_email }}</p>
+          </div>
+          <button class="btn btn-outline">Edit Profile</button>
+        </div>
+        
+        <div class="profile-body">
+          <div class="profile-section">
+            <h3 class="section-title">Personal Information</h3>
+            <div class="profile-fields">
+              <div class="profile-field">
+                <label>First Name</label>
+                <p>{{ user_firstname|default('') }}</p>
+              </div>
+              <div class="profile-field">
+                <label>Last Name</label>
+                <p>{{ user_lastname|default('') }}</p>
+              </div>
+              <div class="profile-field">
+                <label>Email</label>
+                <p>{{ user_email|default('') }}</p>
+              </div>
+              <div class="profile-field">
+                <label>Location</label>
+                <p>{{ user_location|default('Not specified') }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="profile-section">
+            <h3 class="section-title">Resume & Documents</h3>
+            <div class="document-cards">
+              <div class="document-card">
+                <div class="document-icon">
+                  <i class="fas fa-file-pdf"></i>
+                </div>
+                <div class="document-info">
+                  <h4>My Resume.pdf</h4>
+                  <p>Uploaded: May 1, 2025</p>
+                </div>
+                <div class="document-actions">
+                  <button class="btn btn-icon">
+                    <i class="fas fa-download"></i>
+                  </button>
+                  <button class="btn btn-icon">
+                    <i class="fas fa-pen"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="document-card">
+                <div class="document-icon">
+                  <i class="fas fa-file-word"></i>
+                </div>
+                <div class="document-info">
+                  <h4>Cover Letter Template.docx</h4>
+                  <p>Uploaded: April 15, 2025</p>
+                </div>
+                <div class="document-actions">
+                  <button class="btn btn-icon">
+                    <i class="fas fa-download"></i>
+                  </button>
+                  <button class="btn btn-icon">
+                    <i class="fas fa-pen"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <button class="document-upload-btn">
+                <i class="fas fa-plus"></i>
+                <span>Upload New Document</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Job Form Modal -->
+<div id="jobFormModal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modalFormTitle">Add New Job</h3>
+      <button class="close-modal" id="closeModalBtn" aria-label="Close modal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="jobForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="jobTitle">Job Title</label>
+            <input type="text" id="jobTitle" placeholder="e.g. Software Developer" required>
+          </div>
+          <div class="form-group">
+            <label for="jobCompany">Company</label>
+            <input type="text" id="jobCompany" placeholder="e.g. Tech Company Inc.">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="jobType">Job Type</label>
+            <select id="jobType">
+              <option value="full-time">Full-time</option>
+              <option value="part-time">Part-time</option>
+              <option value="internship">Internship</option>
+              <option value="freelance">Freelance</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="jobLocationType">Location Type</label>
+            <select id="jobLocationType">
+              <option value="in-person">In-person</option>
+              <option value="remote">Remote</option>
+              <option value="hybrid">Hybrid</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="jobLocation">Location</label>
+            <input type="text" id="jobLocation" placeholder="e.g. New York, NY">
+          </div>
+          <div class="form-group">
+            <label for="jobStatus">Application Status</label>
+            <select id="jobStatus">
+              <option value="Saved">Saved</option>
+              <option value="Applied">Applied</option>
+              <option value="Interviewing">Interviewing</option>
+              <option value="Offered">Offered</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="jobDeadline">Application Deadline</label>
+            <input type="date" id="jobDeadline">
+          </div>
+          <div class="form-group">
+            <label for="dateApplied">Date Applied</label>
+            <input type="date" id="dateApplied">
+          </div>
+        </div>
+        
         <div class="form-group">
           <label for="jobDesc">Description</label>
           <textarea id="jobDesc" rows="3" placeholder="Job description and notes"></textarea>
         </div>
-    
+        
         <div class="form-group">
           <label for="jobTags">Tags (comma separated)</label>
           <input type="text" id="jobTags" placeholder="e.g. Python, SQL, JavaScript">
         </div>
-    
+        
         <div class="form-actions">
-          <button id="cancelJobBtn" class="btn btn-outline">Cancel</button>
-          <button id="submitJobBtn" class="btn btn-primary">Save Job</button>
+          <button type="button" id="cancelJobBtn" class="btn btn-outline">Cancel</button>
+          <button type="button" id="submitJobBtn" class="btn btn-primary">Save Job</button>
         </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Job Details Modal -->
+<div id="jobDetailModal" class="modal hidden">
+  <div class="modal-content">
+    <button class="close-modal" id="closeDetailModalBtn" aria-label="Close modal">
+      <i class="fas fa-times"></i>
+    </button>
+    <div class="modal-header">
+      <div class="job-company-logo">
+        <img id="modalCompanyLogo" src="/static/img/default-company-logo.png" alt="Company Logo">
       </div>
-    </div>    
-
-    <!-- Jobs Container -->
-    <div id="jobList" class="jobs-container"></div>
-  </main>
-
-  <!-- Job Modal -->
-  <div id="jobModal" class="modal hidden">
-    <div class="modal-content">
-      <button class="close-modal" id="closeModalBtn" aria-label="Close modal">
-        <i class="fas fa-times"></i>
-      </button>
-      <div class="modal-left">
-        <h3 id="modalJobTitle"></h3>
-        <p id="modalCompany" class="modal-subtext"></p>
-        <p id="modalLocation" class="modal-subtext"></p>
-        <p id="modalDeadline" class="modal-subtext"></p>
+      <div class="job-modal-header-content">
+        <h2 id="modalJobTitle"></h2>
+        <div class="job-meta">
+          <span id="modalCompany"></span>
+          <span class="meta-separator">•</span>
+          <span id="modalLocation"></span>
+          <span class="meta-separator">•</span>
+          <span id="modalJobType"></span>
+        </div>
         <div id="modalTags" class="job-tags"></div>
       </div>
-      <div class="modal-right">
-        <p id="modalDescription" class="modal-body"></p>
+      <div class="job-status-badge" id="modalStatusBadge">
+        <span id="modalStatus">Saved</span>
+      </div>
+    </div>
+    
+    <div class="modal-body">
+      <div class="job-detail-grid">
+        <div class="job-detail-main">
+          <div class="detail-section">
+            <h3 class="section-title">Job Description</h3>
+            <div id="modalDescription" class="job-description"></div>
+          </div>
+          
+          <div class="detail-section">
+            <h3 class="section-title">Application Timeline</h3>
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-marker done">
+                  <i class="fas fa-check"></i>
+                </div>
+                <div class="timeline-content">
+                  <h4>Saved</h4>
+                  <p id="modalSavedDate">May 1, 2025</p>
+                </div>
+              </div>
+              <div class="timeline-item" id="timelineApplied">
+                <div class="timeline-marker">
+                  <i class="fas fa-paper-plane"></i>
+                </div>
+                <div class="timeline-content">
+                  <h4>Applied</h4>
+                  <p id="modalAppliedDate">Not yet</p>
+                </div>
+              </div>
+              <div class="timeline-item" id="timelineInterview">
+                <div class="timeline-marker">
+                  <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="timeline-content">
+                  <h4>Interview</h4>
+                  <p id="modalInterviewDate">Not yet</p>
+                </div>
+              </div>
+              <div class="timeline-item" id="timelineOffer">
+                <div class="timeline-marker">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="timeline-content">
+                  <h4>Offer</h4>
+                  <p id="modalOfferDate">Not yet</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="job-detail-sidebar">
+          <div class="detail-card">
+            <h3 class="detail-card-title">Details</h3>
+            <div class="detail-item">
+              <span class="detail-label">Status</span>
+              <span class="detail-value" id="sidebarStatus">Saved</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Deadline</span>
+              <span class="detail-value" id="sidebarDeadline">No deadline</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Date Applied</span>
+              <span class="detail-value" id="sidebarApplied">Not applied yet</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Job Type</span>
+              <span class="detail-value" id="sidebarJobType">Full-time</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Location Type</span>
+              <span class="detail-value" id="sidebarLocationType">In-person</span>
+            </div>
+          </div>
+          
+          <div class="action-buttons">
+            <button id="editJobBtn" class="btn btn-outline btn-block">
+              <i class="fas fa-edit"></i> Edit Job
+            </button>
+            <button id="updateStatusBtn" class="btn btn-primary btn-block">
+              <i class="fas fa-arrow-right"></i> Mark as Applied
+            </button>
+            <button id="deleteJobBtn" class="btn btn-outline-danger btn-block">
+              <i class="fas fa-trash"></i> Delete Job
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-  
-  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-</body>
-</html>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Include Chart.js for data visualization -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard-missing-functions.js') }}"></script>
+{% endblock %}

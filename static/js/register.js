@@ -179,12 +179,14 @@ function validateRegisterForm(event) {
   const lastName = document.getElementById("lastName");
   const passwordElement = document.getElementById("password");
   const email = document.getElementById("email");
+  const newsletterCheckbox = document.getElementById("newsletter");
 
   const formData = {
     firstName: firstName.value,
     lastName: lastName.value,
     password: passwordElement.value,
     email: email.value,
+    newsletter: newsletterCheckbox.checked // Add newsletter subscription status
   };
 
   // Get CSRF token from meta tag

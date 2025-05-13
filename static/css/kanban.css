@@ -1,0 +1,346 @@
+/* 
+ * kanban.css - Kanban Board View Styles for Archeway Dashboard
+ */
+
+/* Kanban Board Container */
+.kanban-board {
+  display: flex;
+  overflow-x: auto;
+  padding: 1rem 0;
+  min-height: calc(100vh - 200px);
+  gap: 1.25rem;
+}
+
+/* Kanban Column */
+.kanban-column {
+  min-width: 300px;
+  width: 300px;
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+}
+
+/* Column Header */
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.column-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.job-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: rgba(0, 0, 0, 0.1);
+  color: var(--text-color);
+  padding: 0 0.5rem;
+}
+
+.dark-mode .job-count {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Column Body */
+.column-body {
+  padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Kanban Card */
+.kanban-card {
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+  cursor: grab;
+  position: relative;
+}
+
+.dark-mode .kanban-card {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.kanban-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.kanban-card.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+  cursor: grabbing;
+}
+
+/* Badge for job type */
+.kanban-job-type {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  background-color: rgba(156, 163, 175, 0.2);
+  color: #6b7280;
+}
+
+.job-type-full-time {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.job-type-part-time {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.job-type-internship {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.job-type-freelance {
+  background-color: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+}
+
+/* Kanban Card Content */
+.kanban-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0 0 0.5rem 0;
+  padding-right: 3rem; /* Space for the job type badge */
+}
+
+.kanban-card-company {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin: 0 0 0.75rem 0;
+}
+
+.kanban-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+.kanban-card-meta i {
+  margin-right: 0.35rem;
+}
+
+.kanban-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.kanban-card-date {
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+
+.kanban-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Empty Column State */
+.empty-column {
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-light);
+  height: 100%;
+}
+
+.empty-column i {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  opacity: 0.3;
+}
+
+.empty-column p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Column Status Colors */
+.kanban-column[data-status="Saved"] .column-header h3 {
+  color: #6b7280;
+}
+
+.kanban-column[data-status="Applied"] .column-header h3 {
+  color: #3b82f6;
+}
+
+.kanban-column[data-status="Interviewing"] .column-header h3 {
+  color: #f59e0b;
+}
+
+.kanban-column[data-status="Offered"] .column-header h3 {
+  color: #10b981;
+}
+
+.kanban-column[data-status="Rejected"] .column-header h3 {
+  color: #ef4444;
+}
+
+/* Kanban Card Drag & Drop Placeholder */
+.kanban-placeholder {
+  height: 0;
+  border-top: 2px dashed var(--border-color);
+  margin: 0.5rem 0;
+  transition: all 0.2s ease;
+}
+
+.kanban-placeholder.active {
+  height: 100px;
+  border: 2px dashed var(--primary-color);
+  border-radius: 8px;
+  background-color: rgba(67, 97, 238, 0.05);
+}
+
+/* Add Card Button */
+.add-kanban-card {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  background-color: transparent;
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  color: var(--text-light);
+  font-size: 0.9rem;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-kanban-card:hover {
+  background-color: rgba(67, 97, 238, 0.05);
+  color: var(--primary-color);
+}
+
+.add-kanban-card i {
+  margin-right: 0.5rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+  .kanban-board {
+    padding-bottom: 2rem;
+  }
+  
+  .kanban-column {
+    min-width: 280px;
+    width: 280px;
+  }
+}
+
+/* Card Quick Actions Menu */
+.quick-actions {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  background-color: var(--card-bg);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  display: none;
+  z-index: 10;
+  padding: 0.5rem;
+}
+
+.kanban-card:hover .quick-actions {
+  display: flex;
+}
+
+.quick-actions button {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  padding: 0.35rem;
+  cursor: pointer;
+  color: var(--text-color);
+  border-radius: 4px;
+}
+
+.quick-actions button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark-mode .quick-actions button:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Progress indicators */
+.progress-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: var(--text-color);
+  background-color: rgba(0, 0, 0, 0.05);
+  margin-right: 0.5rem;
+}
+
+.dark-mode .progress-pill {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.progress-pill i {
+  margin-right: 0.35rem;
+}
+
+.progress-pill.interview {
+  color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.1);
+}
+
+.progress-pill.deadline {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* Responsive layout for smaller screens */
+@media (max-width: 768px) {
+  .kanban-board {
+    flex-direction: column;
+    overflow-x: visible;
+    gap: 2rem;
+  }
+  
+  .kanban-column {
+    width: 100%;
+    min-width: 100%;
+    max-height: 500px;
+  }
+}
